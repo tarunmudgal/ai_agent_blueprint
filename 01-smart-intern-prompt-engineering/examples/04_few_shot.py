@@ -19,14 +19,11 @@ What to look for in the output:
 
 Run:  python3 examples/04_few_shot.py
 """
-
-from __future__ import annotations
-
-import os
 import sys
-from typing import Any, List, Tuple
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from pathlib import Path
+from typing import Any
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from _common import (  # noqa: E402
     CATEGORIES,
@@ -54,7 +51,7 @@ INSTRUCTION = (
 )
 
 # Chosen to teach the boundaries, not to pad the prompt.
-EXAMPLES: List[Tuple[str, str]] = [
+EXAMPLES: list[tuple[str, str]] = [
     ("My invoice shows tax at 20% but we're VAT exempt.",
      "category=billing urgency=3"),
     ("SSO login loops back to the sign-in page for everyone since 9am.",

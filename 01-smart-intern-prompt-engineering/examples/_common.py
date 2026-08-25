@@ -19,11 +19,10 @@ from the repository root (`python3 examples/01_hello_and_tokens.py`) as
 well as from inside `examples/`.
 """
 
-from __future__ import annotations
 
 import os
 import sys
-from typing import Any, List, Tuple
+from typing import Any
 
 try:
     from dotenv import load_dotenv
@@ -131,7 +130,7 @@ identical GBP 49.00 charges on the same card, both dated 3 October. I have alrea
 tried logging in to check my invoices but the billing page just spins forever.
 Could someone refund the duplicate? This is the second month it has happened."""
 
-CATEGORIES: List[str] = [
+CATEGORIES: list[str] = [
     "billing",
     "technical",
     "account_access",
@@ -139,7 +138,7 @@ CATEGORIES: List[str] = [
     "other",
 ]
 
-SAMPLE_TICKETS: List[str] = [
+SAMPLE_TICKETS: list[str] = [
     "I was charged twice for the September invoice. Please refund the duplicate.",
     "The export button spins forever and never downloads the CSV. Chrome 141, macOS.",
     "I can't log in - the password reset email never arrives. Checked spam.",
@@ -148,7 +147,7 @@ SAMPLE_TICKETS: List[str] = [
 ]
 
 # (ticket, expected_category) — the golden set used by 11_eval_harness.py.
-GOLDEN_TICKETS: List[Tuple[str, str]] = [
+GOLDEN_TICKETS: list[tuple[str, str]] = [
     (SAMPLE_TICKETS[0], "billing"),
     (SAMPLE_TICKETS[1], "technical"),
     (SAMPLE_TICKETS[2], "account_access"),

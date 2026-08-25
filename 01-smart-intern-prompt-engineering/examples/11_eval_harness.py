@@ -33,16 +33,13 @@ Honest limits of this harness:
 
 Run:  python3 examples/11_eval_harness.py
 """
-
-from __future__ import annotations
-
-import os
 import sys
 import time
-from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Tuple
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from pydantic import BaseModel, Field, ValidationError  # noqa: E402
 
@@ -80,8 +77,8 @@ class CaseResult:
     index: int
     ticket: str
     expected: str
-    actual: Optional[str]
-    urgency: Optional[int]
+    actual: str | None
+    urgency: int | None
     passed: bool
     note: str
     input_tokens: int
@@ -93,8 +90,8 @@ class CaseResult:
 def run_case(client: Any, index: int, ticket: str, expected: str) -> CaseResult:
     """Classify one ticket and grade it against the golden label."""
     started = time.perf_counter()
-    actual: Optional[str] = None
-    urgency: Optional[int] = None
+    actual: str | None = None
+    urgency: int | None = None
     note = ""
 
     interaction = client.interactions.create(
@@ -138,7 +135,7 @@ def run_case(client: Any, index: int, ticket: str, expected: str) -> CaseResult:
     )
 
 
-def print_table(results: List[CaseResult]) -> None:
+def print_table(results: list[CaseResult]) -> None:
     """Per-case pass/fail, one line each."""
     header = (f"{'#':<3}{'':<6}{'expected':<17}{'actual':<17}"
               f"{'urg':<5}{'note'}")
@@ -152,7 +149,7 @@ def print_table(results: List[CaseResult]) -> None:
               f"{urgency:<5}{r.note}")
 
 
-def print_failures(results: List[CaseResult]) -> None:
+def print_failures(results: list[CaseResult]) -> None:
     """The failures in full, because the summary is not the point."""
     failures = [r for r in results if not r.passed]
     if not failures:
@@ -165,9 +162,9 @@ def print_failures(results: List[CaseResult]) -> None:
         print("  ask yourself: is the PROMPT wrong, or is the LABEL wrong?")
 
 
-def print_confusion(results: List[CaseResult]) -> None:
+def print_confusion(results: list[CaseResult]) -> None:
     """Which pairs of categories the classifier cannot tell apart."""
-    pairs: Dict[Tuple[str, str], int] = {}
+    pairs: dict[tuple[str, str], int] = {}
     for r in results:
         if not r.passed and r.actual:
             key = (r.expected, r.actual)
@@ -191,7 +188,7 @@ def main() -> None:
 
     banner(f"Golden-set eval: {len(GOLDEN_TICKETS)} cases against {MODEL}")
 
-    results: List[CaseResult] = []
+    results: list[CaseResult] = []
     for index, (ticket, expected) in enumerate(GOLDEN_TICKETS, start=1):
         result = run_case(client, index, ticket, expected)
         results.append(result)

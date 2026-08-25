@@ -1,0 +1,17 @@
+# flake8 does not read pyproject.toml, so its config lives here.
+# Line length and exclusions are kept in sync with [tool.black] above.
+[flake8]
+max-line-length = 88
+extend-ignore =
+    # E203: whitespace before ':' — black formats slices this way on purpose,
+    # and E203 disagrees with black. This is black's own documented advice.
+    E203,
+    # W503: line break before binary operator — black's preferred style.
+    W503
+exclude =
+    .git,
+    __pycache__,
+    .venv,
+    venv,
+    build,
+    dist

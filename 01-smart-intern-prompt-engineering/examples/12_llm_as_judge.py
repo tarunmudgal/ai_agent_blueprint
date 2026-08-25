@@ -34,14 +34,11 @@ Honest limits, which matter more here than anywhere else in the chapter:
 
 Run:  python3 examples/12_llm_as_judge.py
 """
-
-from __future__ import annotations
-
-import os
 import sys
-from typing import Any, List, Optional, Tuple
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from pathlib import Path
+from typing import Any
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from pydantic import BaseModel, Field, ValidationError  # noqa: E402
 
@@ -168,7 +165,7 @@ def generate(client: Any, system_instruction: str) -> str:
     return interaction.output_text.strip()
 
 
-def judge(client: Any, candidate: str) -> Optional[JudgeScore]:
+def judge(client: Any, candidate: str) -> JudgeScore | None:
     """Grade one candidate. Returns None if the judge broke its contract."""
     judge_input = (
         f"ORIGINAL TRACE:\n{stack_trace}\n\n"
@@ -229,7 +226,7 @@ def main() -> None:
         "the rubric you read and the rubric it applies cannot drift apart."
     )
 
-    candidates: List[Tuple[str, str]] = []
+    candidates: list[tuple[str, str]] = []
 
     banner("Generating candidates")
     print("variant A (vague prompt)...")
@@ -240,7 +237,7 @@ def main() -> None:
     candidates.append(("CONTROL - known-bad output", KNOWN_BAD_OUTPUT))
 
     banner("Grading")
-    scores: List[Tuple[str, Optional[JudgeScore]]] = []
+    scores: list[tuple[str, JudgeScore | None]] = []
     for label, candidate in candidates:
         rule()
         print(f"{label}")

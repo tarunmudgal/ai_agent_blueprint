@@ -662,13 +662,15 @@ The Interactions API takes typed content blocks. Text, image, audio and video go
 `input` list.
 
 ```python
-import base64, pathlib
+import base64
+from pathlib import Path
+
 from google import genai
 
 client = genai.Client()
 MODEL = "gemini-3.5-flash"
 
-img_b64 = base64.b64encode(pathlib.Path("invoice.png").read_bytes()).decode()
+img_b64 = base64.b64encode(Path("invoice.png").read_bytes()).decode()
 
 interaction = client.interactions.create(
     model=MODEL,

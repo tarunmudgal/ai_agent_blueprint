@@ -20,15 +20,12 @@ What to look for in the output:
 
 Run:  python3 examples/05_structured_output.py
 """
-
-from __future__ import annotations
-
 import json
-import os
 import sys
-from typing import Any, Optional
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from pathlib import Path
+from typing import Any
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from pydantic import BaseModel, Field, ValidationError  # noqa: E402
 
@@ -69,7 +66,7 @@ SYSTEM_INSTRUCTION = (
 )
 
 
-def classify(client: Any, ticket: str) -> Optional[TicketClassification]:
+def classify(client: Any, ticket: str) -> TicketClassification | None:
     """Classify one ticket, returning None if the contract was broken."""
     interaction = client.interactions.create(
         model=MODEL,

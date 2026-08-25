@@ -1,0 +1,29 @@
+# ---------------------------------------------------------------------------
+# ai_agent_blueprint — repo-wide runtime dependencies
+#
+# This file aggregates the runtime dependencies needed to run the examples
+# across every chapter in this repo. Install with:
+#
+#     python3 -m pip install -r requirements.txt
+#
+# Each chapter also ships its own requirements.txt (e.g.
+# 01-smart-intern-prompt-engineering/requirements.txt) with chapter-specific
+# comments on *why* each package and version floor is needed — read that one
+# if you only want to work through a single chapter. This root file exists
+# so `pip install -r requirements.txt` works from the repo root too, and so
+# it stays in sync as new chapters (Blueprints 2-5) are added.
+# ---------------------------------------------------------------------------
+
+# --- Chapter 1: The Smart Intern (Single-Shot Inquiries) -------------------
+
+# Official Google Gen AI SDK. The >=1.55.0 floor is required for the
+# Interactions API (client.interactions.create), used throughout Chapter 1.
+google-genai>=1.55.0
+
+# Loads GEMINI_API_KEY from a local .env file so the key never lives in
+# shell history or source control.
+python-dotenv>=1.0.0
+
+# Structured output: model_json_schema() and model_validate_json() require
+# Pydantic v2.
+pydantic>=2.0.0

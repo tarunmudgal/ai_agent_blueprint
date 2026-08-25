@@ -28,14 +28,11 @@ legal way to say nothing.
 
 Run:  python3 examples/08_grounding.py
 """
-
-from __future__ import annotations
-
-import os
 import sys
-from typing import Any, Optional
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from pathlib import Path
+from typing import Any
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from _common import (  # noqa: E402
     MODEL,
@@ -81,7 +78,7 @@ Trace:
 {stack_trace}"""
 
 
-def run(client: Any, system_instruction: Optional[str], label: str) -> None:
+def run(client: Any, system_instruction: str | None, label: str) -> None:
     banner(label)
     interaction = client.interactions.create(
         model=MODEL,

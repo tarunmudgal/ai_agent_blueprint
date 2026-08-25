@@ -32,15 +32,12 @@ MODEL is imported so there is exactly one place to change it.
 
 Run:  python3 examples/06_thinking_levels.py
 """
-
-from __future__ import annotations
-
-import os
 import sys
 import time
-from typing import Any, Dict, List
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from pathlib import Path
+from typing import Any
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from _common import (  # noqa: E402
     CATEGORIES,
@@ -50,7 +47,7 @@ from _common import (  # noqa: E402
     get_client,
 )
 
-LEVELS: List[str] = ["minimal", "low", "medium", "high"]
+LEVELS: list[str] = ["minimal", "low", "medium", "high"]
 
 SYSTEM_INSTRUCTION = (
     "Classify the support ticket into exactly one of: "
@@ -67,7 +64,7 @@ TICKET = (
 )
 
 
-def timed_call(client: Any, level: str) -> Dict[str, Any]:
+def timed_call(client: Any, level: str) -> dict[str, Any]:
     """Run one classification at a given thinking_level and time it."""
     started = time.perf_counter()
 

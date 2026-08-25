@@ -1,0 +1,91 @@
+# ---------------------------------------------------------------------------
+# ai_agent_blueprint — project metadata and tool configuration
+#
+# This is a learning / newsletter-companion repo, not a distributable
+# package — there is no [build-system] section on purpose. This file exists
+# to give black, isort, pylint, mypy, and bandit one shared source of truth
+# instead of five scattered config files. (flake8 is the one exception: it
+# does not support pyproject.toml, so its settings live in .flake8.)
+# ---------------------------------------------------------------------------
+
+[project]
+name = "ai-agent-blueprint"
+description = "Companion code and knowledge base for The AI Agent Blueprint newsletter"
+readme = "README.md"
+requires-python = ">=3.10"
+
+# ---------------------------------------------------------------------------
+# black — formatter. Line length matches the ~88-char wrap used in the prose
+# chapters so code blocks copy-pasted from the Markdown don't get reflowed.
+# ---------------------------------------------------------------------------
+[tool.black]
+line-length = 88
+target-version = ["py310", "py311", "py312", "py313", "py314"]
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+    \.venv
+  | venv
+  | \.git
+  | __pycache__
+)/
+'''
+
+# ---------------------------------------------------------------------------
+# isort — import sorting. profile = "black" turns off isort's own formatting
+# opinions so it never fights with black over how a sorted import looks.
+# ---------------------------------------------------------------------------
+[tool.isort]
+profile = "black"
+line_length = 88
+known_first_party = ["examples"]
+
+# ---------------------------------------------------------------------------
+# pylint — deep static analysis.
+# ---------------------------------------------------------------------------
+[tool.pylint.main]
+py-version = "3.10"
+jobs = 0                              # auto-detect CPU count
+ignore = ["CVS", ".venv", "venv"]
+
+[tool.pylint.format]
+max-line-length = 88
+
+[tool.pylint.messages_control]
+disable = [
+    # Each chapter script is a short, self-contained teaching example rather
+    # than a library module — these checks fit a larger codebase better
+    # than a folder of numbered walkthrough scripts.
+    "missing-module-docstring",       # every script has one anyway; not enforced
+    "too-many-locals",                # walkthrough scripts favour explicit names
+    "duplicate-code",                 # examples deliberately repeat patterns to teach them
+    "fixme",                          # a few scripts contain intentional "TODO" markers
+]
+
+[tool.pylint.design]
+max-args = 8
+max-branches = 15
+
+# ---------------------------------------------------------------------------
+# mypy — static type checking. Kept permissive: examples use type hints for
+# clarity, not to pass a strict-mode gate. `pydantic` and `google-genai` ship
+# their own types, so no extra stub packages are needed.
+# ---------------------------------------------------------------------------
+[tool.mypy]
+python_version = "3.10"
+ignore_missing_imports = true
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+check_untyped_defs = true
+disallow_untyped_defs = false
+exclude = ["^\\.venv/", "^venv/"]
+
+# ---------------------------------------------------------------------------
+# bandit — security linter. B101 (assert) is disabled because the eval
+# harness and pattern-library examples use bare `assert` for teaching
+# clarity, not as a production security boundary.
+# ---------------------------------------------------------------------------
+[tool.bandit]
+exclude_dirs = [".venv", "venv", "__pycache__"]
+skips = ["B101"]

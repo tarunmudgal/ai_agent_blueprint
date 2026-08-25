@@ -1,0 +1,45 @@
+# ---------------------------------------------------------------------------
+# ai_agent_blueprint — repo-wide ignores
+# Chapter folders may carry their own .gitignore for chapter-specific notes;
+# this one covers everything common across the whole series.
+# ---------------------------------------------------------------------------
+
+# Secrets — never commit a real key
+.env
+*.env
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Tool caches
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.pylint.d/
+.pylintrc.bak
+htmlcov/
+.coverage
+.coverage.*
+
+# Editors / OS
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*~
+
+# Notebook checkpoints (if any chapter adds notebooks)
+.ipynb_checkpoints/

@@ -233,7 +233,7 @@ token count.
 
 ```mermaid
 flowchart LR
-    A[Python 3.9+] --> B[Create venv]
+    A[Python 3.10+] --> B[Create venv]
     B --> C[pip install google-genai]
     C --> D[Get key from AI Studio]
     D --> E[Set GEMINI_API_KEY]
@@ -252,15 +252,42 @@ environment variable.
 
 | Need | Version | Check with |
 |---|---|---|
-| Python | 3.9 or newer | `python3 --version` |
+| Python | 3.10 or newer | `python3 --version` |
 | pip | any recent | `python3 -m pip --version` |
 | A Google account | — | for AI Studio |
 
-If `python3 --version` prints 3.8 or lower, install a newer Python before continuing.
-The `google-genai` SDK requires 3.9+.
+If `python3 --version` prints 3.9 or lower, install a newer Python before continuing.
+`google-genai` itself now requires 3.10+ on PyPI, and Python 3.9 reached end of life
+on 31 October 2025 — no more security fixes, from anyone, ever. There is no version
+of this chapter that works on 3.9.
 
 > **Windows note:** use `python` instead of `python3` throughout, unless you installed
 > Python from the Microsoft Store, in which case `python3` works too.
+
+> **Why this chapter targets 3.10+, and what changed if you've seen older Python code**
+>
+> Every example in this chapter uses two conventions that are recent enough to be
+> unfamiliar if you learned Python a few years ago:
+>
+> - **`str | None` instead of `Optional[str]`, `list[str]` instead of `List[str]`.**
+>   The `|` union syntax for types (PEP 604) shipped in Python 3.10. Once you're on
+>   3.10+, there is no remaining reason to import `Optional`, `List`, `Dict`, or
+>   `Tuple` from `typing` — the builtins do the same job with less ceremony. `Any`
+>   is the one name in this chapter that still comes from `typing`, because there
+>   is no builtin equivalent for "could genuinely be anything."
+> - **No `from __future__ import annotations` at the top of any file.** That import
+>   used to be near-mandatory — it deferred evaluation of type hints so forward
+>   references and the (then only in preview) union syntax wouldn't blow up at
+>   runtime on older interpreters. Python 3.14 ships
+>   [PEP 649](https://peps.python.org/pep-0649/), which makes deferred evaluation
+>   the *default* behavior for everyone, not an opt-in. On 3.10–3.13 you still
+>   don't need the future-import for anything in this chapter, because `str | None`
+>   has been valid at runtime — no deferral required — since 3.10. The import isn't
+>   wrong if you add it back; it's just one fewer line every file needs now.
+>
+> If you're reading this chapter's code and something looks unfamiliar, it's very
+> likely one of these two things. Neither is exotic — both are now the ordinary way
+> to write Python.
 
 ---
 
@@ -5752,13 +5779,15 @@ The Interactions API takes typed content blocks. Text, image, audio and video go
 `input` list.
 
 ```python
-import base64, pathlib
+import base64
+from pathlib import Path
+
 from google import genai
 
 client = genai.Client()
 MODEL = "gemini-3.5-flash"
 
-img_b64 = base64.b64encode(pathlib.Path("invoice.png").read_bytes()).decode()
+img_b64 = base64.b64encode(Path("invoice.png").read_bytes()).decode()
 
 interaction = client.interactions.create(
     model=MODEL,

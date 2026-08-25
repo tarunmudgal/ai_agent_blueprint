@@ -1,0 +1,37 @@
+# ---------------------------------------------------------------------------
+# ai_agent_blueprint — development tooling
+#
+# Not needed to run the examples — only to work on this repo (format, lint,
+# type-check, and scan for security issues before committing). Install with:
+#
+#     python3 -m pip install -r requirements.txt -r requirements-dev.txt
+#
+# Configuration for these tools lives in pyproject.toml (black, isort,
+# pylint, mypy, bandit) and .flake8 (flake8 does not read pyproject.toml).
+# Run everything at once with `make lint`, or `make format` to auto-fix
+# what can be auto-fixed. See the Makefile for the full command list.
+# ---------------------------------------------------------------------------
+
+# --- Formatting -------------------------------------------------------------
+black>=24.0.0          # opinionated code formatter — no style debates
+isort>=5.13.0           # sorts and groups imports; configured to agree with black
+
+# --- Linting -----------------------------------------------------------------
+pylint>=3.1.0           # deep static analysis: unused vars, bad patterns, complexity
+flake8>=7.0.0           # fast style/lint pass (pyflakes + pycodestyle + mccabe)
+
+# --- Type checking -----------------------------------------------------------
+mypy>=1.9.0             # static type checking against the type hints in examples/
+
+# --- Security ------------------------------------------------------------
+# Relevant here specifically because this series teaches API-key handling —
+# bandit catches hardcoded secrets, unsafe eval/exec, and similar issues.
+bandit>=1.7.8
+
+# --- Testing -------------------------------------------------------------
+pytest>=8.0.0           # for any future test suites (e.g. the eval harness in Ch1 §6.4)
+
+# --- Automation ------------------------------------------------------------
+pre-commit>=3.6.0       # runs the above automatically on `git commit`; see
+                        # .pre-commit-config.yaml. Enable once with:
+                        #     pre-commit install

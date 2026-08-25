@@ -23,15 +23,12 @@ crashes your renderer mid-sentence is worse than no stream at all.
 
 Run:  python3 examples/07_streaming.py
 """
-
-from __future__ import annotations
-
-import os
 import sys
 import time
-from typing import Any, Optional, Tuple
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from pathlib import Path
+from typing import Any
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from _common import (  # noqa: E402
     MODEL,
@@ -72,12 +69,12 @@ def non_streaming(client: Any) -> float:
     return total
 
 
-def streaming(client: Any) -> Tuple[Optional[float], float]:
+def streaming(client: Any) -> tuple[float | None, float]:
     """Render tokens as they arrive. Returns (ttft, total) in seconds."""
     banner("STREAMING")
 
     started = time.perf_counter()
-    ttft: Optional[float] = None
+    ttft: float | None = None
     final_event: Any = None
 
     stream = client.interactions.create(

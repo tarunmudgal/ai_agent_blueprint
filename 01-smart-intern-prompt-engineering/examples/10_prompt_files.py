@@ -25,15 +25,13 @@ you ever need nested YAML, add the dependency - do not extend this parser.
 Run:  python3 examples/10_prompt_files.py
 """
 
-from __future__ import annotations
 
-import os
 import re
 import sys
 from dataclasses import dataclass, field
-from typing import Any, Dict, List
+from pathlib import Path
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from _common import (  # noqa: E402
     MODEL,
@@ -45,9 +43,7 @@ from _common import (  # noqa: E402
 )
 
 # prompts/ sits next to examples/, one level up from this file.
-PROMPTS_DIR = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "prompts"
-)
+PROMPTS_DIR = Path(__file__).resolve().parent.parent / "prompts"
 
 # Matches a single-brace {placeholder} token with a bare identifier inside.
 PLACEHOLDER_RE = re.compile(r"\{([a-zA-Z_][a-zA-Z0-9_]*)\}")
@@ -61,13 +57,13 @@ class PromptError(RuntimeError):
 class Prompt:
     """A prompt file, split into metadata and body."""
 
-    path: str
+    path: Path
     body: str
-    meta: Dict[str, str] = field(default_factory=dict)
+    meta: dict[str, str] = field(default_factory=dict)
 
     @property
     def name(self) -> str:
-        return self.meta.get("name", os.path.basename(self.path))
+        return self.meta.get("name", self.path.name)
 
     @property
     def version(self) -> str:
@@ -85,9 +81,9 @@ class Prompt:
     def description(self) -> str:
         return self.meta.get("description", "")
 
-    def placeholders(self) -> List[str]:
+    def placeholders(self) -> list[str]:
         """Every {token} in the body, in order of first appearance."""
-        seen: List[str] = []
+        seen: list[str] = []
         for match in PLACEHOLDER_RE.finditer(self.body):
             if match.group(1) not in seen:
                 seen.append(match.group(1))
@@ -121,9 +117,9 @@ class Prompt:
         return rendered
 
 
-def parse_frontmatter(text: str) -> Dict[str, str]:
+def parse_frontmatter(text: str) -> dict[str, str]:
     """Parse a flat `key: value` YAML block. No nesting, no lists."""
-    meta: Dict[str, str] = {}
+    meta: dict[str, str] = {}
     for raw_line in text.splitlines():
         line = raw_line.strip()
         if not line or line.startswith("#"):
@@ -137,14 +133,13 @@ def parse_frontmatter(text: str) -> Dict[str, str]:
 
 def load_prompt(filename: str) -> Prompt:
     """Read prompts/<filename>, split frontmatter from body."""
-    path = os.path.join(PROMPTS_DIR, filename)
-    if not os.path.exists(path):
+    path = PROMPTS_DIR / filename
+    if not path.exists():
         raise PromptError(f"no such prompt file: {path}")
 
-    with open(path, "r", encoding="utf-8") as handle:
-        text = handle.read()
+    text = path.read_text(encoding="utf-8")
 
-    meta: Dict[str, str] = {}
+    meta: dict[str, str] = {}
     body = text
 
     # Frontmatter is the block between the first two --- fences, and only
