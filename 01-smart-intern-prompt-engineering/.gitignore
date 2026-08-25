@@ -1,0 +1,8 @@
+# Never commit the real key file. .env.example is the one that gets committed.
+.env
+
+# Python build artefacts
+__pycache__/
+*.py[cod]
+.venv/
+venv/

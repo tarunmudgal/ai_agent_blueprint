@@ -1,0 +1,20 @@
+# Blueprint 1 — The Smart Intern
+# Install with:  python3 -m pip install -r requirements.txt
+
+# The official Google Gen AI SDK.
+# The >=1.55.0 floor is NOT cosmetic: the Interactions API
+# (client.interactions.create(...)) — which is the primary API used
+# throughout this chapter — was only added to the Python SDK in 1.55.0.
+# On anything older, every example here fails with AttributeError on
+# `client.interactions`. Upgrade rather than working around it: every
+# example in this chapter goes through the Interactions API.
+google-genai>=1.55.0
+
+# Loads GEMINI_API_KEY out of a local .env file so the key never
+# lives in your shell history or in source control.
+python-dotenv>=1.0.0
+
+# Used for structured output: we hand Pydantic's model_json_schema()
+# straight to response_format and validate the reply with
+# model_validate_json(). v2 is required — v1 has no model_json_schema().
+pydantic>=2.0.0
