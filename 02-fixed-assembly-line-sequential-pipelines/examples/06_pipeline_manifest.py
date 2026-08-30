@@ -25,7 +25,6 @@ What to look for in the output:
 Run:  python3 examples/06_pipeline_manifest.py
 """
 import re
-
 from dataclasses import dataclass, field
 from pathlib import Path
 

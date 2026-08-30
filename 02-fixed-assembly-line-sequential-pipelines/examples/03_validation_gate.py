@@ -28,12 +28,10 @@ What to look for in the output:
 Run:  python3 examples/03_validation_gate.py
 """
 import sys
-
 from pathlib import Path
 from typing import Any
-sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from pydantic import BaseModel, Field, ValidationError  # noqa: E402
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from _common import (  # noqa: E402
     MODEL,
@@ -43,6 +41,7 @@ from _common import (  # noqa: E402
     report_usage,
     rule,
 )
+from pydantic import BaseModel, Field, ValidationError  # noqa: E402
 
 PROMPTS_DIR = Path(__file__).resolve().parent.parent / "prompts"
 

@@ -28,17 +28,15 @@ What to look for in the output:
 Run:  python3 examples/02_incident_response_pipeline.py
 """
 import sys
-
 from pathlib import Path
 from typing import Any
-sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from pydantic import BaseModel, Field, ValidationError  # noqa: E402
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from _common import (  # noqa: E402
     MODEL,
-    Pipeline,
     STORE_DEFAULT,
+    Pipeline,
     Stage,
     banner,
     get_client,
@@ -46,6 +44,7 @@ from _common import (  # noqa: E402
     rule,
     ticket_text,
 )
+from pydantic import BaseModel, Field, ValidationError  # noqa: E402
 
 PROMPTS_DIR = Path(__file__).resolve().parent.parent / "prompts"
 

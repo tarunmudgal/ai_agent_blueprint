@@ -30,9 +30,8 @@ What to look for in the output:
 
 Run:  python3 examples/04_partial_failure_demo.py
 """
-from pydantic import BaseModel, Field
-
 from _common import banner, rule, ticket_text
+from pydantic import BaseModel, Field
 
 ESCALATE_URGENCY_THRESHOLD = 4
 ESCALATE_CATEGORY = "account_access"

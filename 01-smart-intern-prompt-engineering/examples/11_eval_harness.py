@@ -35,13 +35,11 @@ Run:  python3 examples/11_eval_harness.py
 """
 import sys
 import time
-
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
-sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from pydantic import BaseModel, Field, ValidationError  # noqa: E402
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from _common import (  # noqa: E402
     CATEGORIES,
@@ -52,6 +50,7 @@ from _common import (  # noqa: E402
     get_client,
     rule,
 )
+from pydantic import BaseModel, Field, ValidationError  # noqa: E402
 
 # Fail the run below this. Pick a number you would actually block a merge
 # on, not an aspirational one.

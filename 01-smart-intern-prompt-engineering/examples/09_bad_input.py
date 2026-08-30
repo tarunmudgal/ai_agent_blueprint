@@ -31,9 +31,9 @@ What to look for in the output:
 Run:  python3 examples/09_bad_input.py
 """
 import sys
-
 from pathlib import Path
 from typing import Any
+
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from _common import (  # noqa: E402

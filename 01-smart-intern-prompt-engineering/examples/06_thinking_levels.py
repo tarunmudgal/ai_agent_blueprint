@@ -34,18 +34,12 @@ Run:  python3 examples/06_thinking_levels.py
 """
 import sys
 import time
-
 from pathlib import Path
 from typing import Any
+
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from _common import (  # noqa: E402
-    CATEGORIES,
-    MODEL,
-    STORE_DEFAULT,
-    banner,
-    get_client,
-)
+from _common import CATEGORIES, MODEL, STORE_DEFAULT, banner, get_client  # noqa: E402
 
 LEVELS: list[str] = ["minimal", "low", "medium", "high"]
 

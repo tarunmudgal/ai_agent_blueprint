@@ -25,9 +25,9 @@ Run:  python3 examples/07_streaming.py
 """
 import sys
 import time
-
 from pathlib import Path
 from typing import Any
+
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from _common import (  # noqa: E402

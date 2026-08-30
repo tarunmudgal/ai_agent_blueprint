@@ -24,13 +24,11 @@ What to look for in the output:
 Run:  python3 examples/05_pipeline_eval.py
 """
 import sys
-
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
-sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from pydantic import BaseModel, Field, ValidationError  # noqa: E402
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from _common import (  # noqa: E402
     MODEL,
@@ -40,6 +38,7 @@ from _common import (  # noqa: E402
     rule,
     ticket_text,
 )
+from pydantic import BaseModel, Field, ValidationError  # noqa: E402
 
 PROMPTS_DIR = Path(__file__).resolve().parent.parent / "prompts"
 PASS_THRESHOLD = 0.75

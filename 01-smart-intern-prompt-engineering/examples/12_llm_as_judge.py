@@ -35,12 +35,10 @@ Honest limits, which matter more here than anywhere else in the chapter:
 Run:  python3 examples/12_llm_as_judge.py
 """
 import sys
-
 from pathlib import Path
 from typing import Any
-sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from pydantic import BaseModel, Field, ValidationError  # noqa: E402
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from _common import (  # noqa: E402
     MODEL,
@@ -51,6 +49,7 @@ from _common import (  # noqa: E402
     rule,
     stack_trace,
 )
+from pydantic import BaseModel, Field, ValidationError  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # The rubric. Written once, printed to the console, and pasted verbatim into
