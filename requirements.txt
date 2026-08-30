@@ -27,3 +27,10 @@ python-dotenv>=1.0.0
 # Structured output: model_json_schema() and model_validate_json() require
 # Pydantic v2.
 pydantic>=2.0.0
+
+# --- Chapter 2: The Fixed Assembly Line (Sequential Pipelines) --------------
+#
+# No new packages. A pipeline is plain Python composing the same
+# client.interactions.create calls Chapter 1 established -- the Stage/Pipeline
+# classes, manifests, and validation gates are all built on the three
+# packages above.

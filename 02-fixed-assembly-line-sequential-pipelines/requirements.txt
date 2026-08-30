@@ -1,0 +1,25 @@
+# Blueprint 2 — The Fixed Assembly Line
+# Install with:  python3 -m pip install -r requirements.txt
+
+# Nothing new here. A pipeline in this blueprint is plain Python composing
+# the same single-shot calls Chapter 1 established — each stage is still one
+# client.interactions.create() call, chained by your own code, not by a new
+# library. If you already set up Chapter 1's environment, this file installs
+# exactly the same three packages and you can skip straight to the examples.
+
+# The official Google Gen AI SDK.
+# The >=1.55.0 floor is NOT cosmetic: the Interactions API
+# (client.interactions.create(...)) — which is the only API used throughout
+# this chapter — was only added to the Python SDK in 1.55.0. On anything
+# older, every example here fails with AttributeError on `client.interactions`.
+google-genai>=1.55.0
+
+# Loads GEMINI_API_KEY out of a local .env file so the key never
+# lives in your shell history or in source control.
+python-dotenv>=1.0.0
+
+# Used for structured output at every seam between two pipeline stages: we
+# hand Pydantic's model_json_schema() straight to response_format and
+# validate the reply with model_validate_json(). v2 is required — v1 has no
+# model_json_schema().
+pydantic>=2.0.0

@@ -10,7 +10,7 @@ simplest to most complex. Each gets its own chapter here.
 | # | Blueprint | Chapter | Status |
 |---|---|---|---|
 | 1 | **The Smart Intern** — Single-Shot Inquiries | [`01-smart-intern-prompt-engineering/`](./01-smart-intern-prompt-engineering/00-index.md) | Complete |
-| 2 | The Fixed Assembly Line — Sequential Pipelines | — | Planned |
+| 2 | **The Fixed Assembly Line** — Sequential Pipelines | [`02-fixed-assembly-line-sequential-pipelines/`](./02-fixed-assembly-line-sequential-pipelines/00-index.md) | Complete |
 | 3 | The Intelligent Library — Grounded Context | — | Planned |
 | 4 | The Autopilot Worker — The Tool-Using Loop | — | Planned |
 | 5 | The Connected Boardroom — Specialist Networks | — | Planned |
@@ -70,13 +70,20 @@ ai_agent_blueprint/
 ├── pyproject.toml, .flake8               <- shared tool configuration
 ├── Makefile                              <- make install / format / lint / check
 ├── .pre-commit-config.yaml               <- optional automatic checks on git commit
-└── 01-smart-intern-prompt-engineering/   <- Chapter 1 (see table above)
+├── 01-smart-intern-prompt-engineering/   <- Chapter 1 (see table above)
     ├── 00-index.md                       <- chapter table of contents, start here
     ├── 00-setup.md ... 08-practice.md    <- the chapter, section by section
     ├── The-Smart-Intern-Prompt-Engineering.md  <- the whole chapter, one file
     ├── examples/                         <- 13 runnable scripts
     ├── prompts/, skills/                 <- reusable artifacts the chapter teaches
     └── requirements.txt, .env.example    <- this chapter's own dependencies
+└── 02-fixed-assembly-line-sequential-pipelines/  <- Chapter 2 (see table above)
+    ├── 00-index.md                       <- chapter table of contents, start here
+    ├── 01-vocabulary.md ... 08-practice.md     <- the chapter, section by section
+    ├── The-Fixed-Assembly-Line-Sequential-Pipelines.md  <- the whole chapter, one file
+    ├── examples/                         <- 6 runnable pipeline scripts
+    ├── prompts/                          <- new stage prompts + 3 reused verbatim from Ch1
+    └── requirements.txt, .env.example    <- this chapter's own dependencies (same 3 packages)
 ```
 
 ## Development
