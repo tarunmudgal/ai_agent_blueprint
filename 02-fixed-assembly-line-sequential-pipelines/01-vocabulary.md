@@ -14,19 +14,18 @@ risk list out, four stages in between.
 `document_text` — the post-incident review memo from the session preamble — is our source.
 The pipeline runs it through four fixed stages, in this order, always:
 
-```
-document_text
-     │
-     ▼
-┌─────────────┐    ┌─────────────┐    ┌──────────────┐    ┌─────────────┐
-│  STAGE 1     │    │  STAGE 2     │    │  STAGE 3      │    │  STAGE 4     │
-│  Translate   │───▶│  Summarize   │───▶│  Extract      │───▶│  Format as   │
-│  → Spanish   │    │  → 6-sent.   │    │  risks        │    │  bullets     │
-│              │    │    exec sum. │    │  (structured) │    │  (Markdown)  │
-└─────────────┘    └─────────────┘    └──────────────┘    └─────────────┘
-                                                                    │
-                                                                    ▼
-                                                          final bulleted list
+```mermaid
+flowchart TD
+    D(["document_text"]) --> S1["Stage 1: Translate<br/>-> Spanish"]
+    S1 --> S2["Stage 2: Summarize<br/>-> 6-sentence exec summary"]
+    S2 --> S3["Stage 3: Extract risks<br/>(structured)"]
+    S3 --> S4["Stage 4: Format as bullets<br/>(Markdown)"]
+    S4 --> F(["final bulleted list"])
+
+    classDef modelCall fill:#e0f0ff,stroke:#4a90d9,color:#1a1a1a
+    classDef terminal fill:#e8f5e9,stroke:#4caf50,color:#1a1a1a
+    class S1,S2,S3,S4 modelCall
+    class D,F terminal
 ```
 
 Before decomposing it, watch it run as a black box. This is real, runnable code — the full
@@ -139,18 +138,14 @@ def looks_like_pure_translation(text: str) -> bool:
 print(looks_like_pure_translation(loose_translate))   # False — caught at the seam
 ```
 
-```
-STAGE N                          SEAM                          STAGE N+1
-┌────────────┐         ┌───────────────────────────┐         ┌────────────┐
-│  produces   │────────▶│  output contract  ==?     │────────▶│  consumes   │
-│  raw output │         │  input contract           │         │  as truth   │
-└────────────┘         │                            │         └────────────┘
-                        │   ┌────────────────────┐   │
-                        │   │  VALIDATION GATE    │   │
-                        │   │  reject / repair /  │   │
-                        │   │  pass               │   │
-                        │   └────────────────────┘   │
-                        └───────────────────────────┘
+```mermaid
+flowchart LR
+    N["STAGE N<br/>produces raw output"] --> G{"SEAM<br/>output contract == input contract?"}
+    G --> V[["VALIDATION GATE<br/>reject / repair / pass"]]
+    V --> NP1["STAGE N+1<br/>consumes as truth"]
+
+    classDef errorPath fill:#ffe0e0,stroke:#d94a4a,color:#1a1a1a
+    class V errorPath
 ```
 
 ---
@@ -198,19 +193,18 @@ This distinction is easy to get backwards, because the Interactions API has a re
 for multi-turn state (`previous_interaction_id`), and it is tempting to reach for it here.
 Don't. Here is why:
 
-```
-CONVERSATION (previous_interaction_id)          PIPELINE (this chapter)
-┌─────────────────────────────┐                ┌─────────────────────────────┐
-│ turn 1 ──▶ turn 2 ──▶ turn 3 │                │ stage 1 ──▶ stage 2 ──▶ ... │
-│   the API remembers          │                │   YOUR CODE remembers        │
-│   turn 1 for you              │                │   stage 1's output, and      │
-│   via previous_interaction_id │                │   decides what stage 2 sees  │
-│                               │                │                               │
-│ same task, same voice,       │                │ four DIFFERENT tasks:        │
-│ deepening one exchange        │                │ translate, summarize,        │
-│                               │                │ extract, format —            │
-│                               │                │ each with ITS OWN contract   │
-└─────────────────────────────┘                └─────────────────────────────┘
+```mermaid
+flowchart LR
+    subgraph CONV["CONVERSATION (previous_interaction_id)"]
+        direction LR
+        T1["turn 1"] --> T2["turn 2"] --> T3["turn 3"]
+        CN["the API remembers turn 1 for you<br/>via previous_interaction_id<br/><br/>same task, same voice,<br/>deepening one exchange"]
+    end
+    subgraph PIPE["PIPELINE (this chapter)"]
+        direction LR
+        S1["stage 1"] --> S2["stage 2"] --> S3["..."]
+        PN["YOUR CODE remembers stage 1's<br/>output, and decides what stage 2 sees<br/><br/>four DIFFERENT tasks: translate,<br/>summarize, extract, format —<br/>each with ITS OWN contract"]
+    end
 ```
 
 Every stage in this chapter is called with `store=False` and no `previous_interaction_id`.
@@ -236,22 +230,19 @@ Illustrative numbers for the Risk Report Pipeline (marked illustrative — get r
 for your own documents with `count_tokens` and by timing your own calls, exactly as §1.1
 showed):
 
-```
-COST COMPOSITION (illustrative token counts)
-Stage 1  Translate      ██████████████████████         ~900 in / ~950 out
-Stage 2  Summarize      ████████████████               ~950 in / ~180 out
-Stage 3  Extract risks  ██████████                     ~180 in / ~120 out
-Stage 4  Format bullets ██████                          ~120 in / ~90 out
-                         ────────────────────────────────────────────────
-                         PIPELINE TOTAL  ~2,150 in / ~1,340 out tokens
+```mermaid
+flowchart TD
+    subgraph COST["Cost composition (illustrative token counts)"]
+        direction LR
+        C1["Stage 1: Translate<br/>~900 in / ~950 out"] --> C2["Stage 2: Summarize<br/>~950 in / ~180 out"] --> C3["Stage 3: Extract risks<br/>~180 in / ~120 out"] --> C4["Stage 4: Format bullets<br/>~120 in / ~90 out"] --> CT(["Pipeline total<br/>~2,150 in / ~1,340 out tokens"])
+    end
+    subgraph LAT["Latency composition (illustrative, sequential calls, no streaming)"]
+        direction LR
+        L1["Stage 1<br/>~2.1s"] --> L2["Stage 2<br/>~1.5s"] --> L3["Stage 3<br/>~0.9s"] --> L4["Stage 4<br/>~0.6s"] --> LT(["Pipeline total<br/>~5.1s"])
+    end
 
-LATENCY COMPOSITION (illustrative, sequential calls, no streaming)
-Stage 1  ████████████████████  ~2.1s
-Stage 2  ██████████████        ~1.5s
-Stage 3  ████████               ~0.9s
-Stage 4  ██████                 ~0.6s
-                         ─────────────
-                         PIPELINE TOTAL  ~5.1s
+    classDef terminal fill:#e8f5e9,stroke:#4caf50,color:#1a1a1a
+    class CT,LT terminal
 ```
 
 **One mega-prompt asking for translation, summary, risks, and bullets in a single call would
@@ -277,14 +268,19 @@ A pipeline has a new one — **partial failure**: stage 1 succeeds, stage 2 fail
 document is now translated but not summarized. That is a different state than "nothing
 happened," and treating it as equivalent to total failure loses real, already-paid-for work.
 
-```
-Stage 1 ✅ translate  ──▶  Stage 2 ❌ summarize  ──▶  Stage 3 ⬜ (never ran)  ──▶  Stage 4 ⬜
-                              │
-                              ▼
-                     What do you do with the
-                     translated text you already
-                     have? Discard it? Retry just
-                     stage 2? Retry from stage 1?
+```mermaid
+flowchart LR
+    S1["Stage 1<br/>translate<br/>SUCCEEDED"] --> S2["Stage 2<br/>summarize<br/>FAILED"]
+    S2 --> S3["Stage 3<br/>(never ran)"]
+    S3 --> S4["Stage 4<br/>(never ran)"]
+    S2 --> Q{"What do you do with the<br/>translated text you already have?<br/>Discard it? Retry just stage 2?<br/>Retry from stage 1?"}
+
+    classDef terminal fill:#e8f5e9,stroke:#4caf50,color:#1a1a1a
+    classDef errorPath fill:#ffe0e0,stroke:#d94a4a,color:#1a1a1a
+    classDef neverRan fill:#eeeeee,stroke:#999999,color:#666666
+    class S1 terminal
+    class S2 errorPath
+    class S3,S4 neverRan
 ```
 
 The question a partial failure forces you to answer, every time: **do you retry the failed

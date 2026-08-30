@@ -207,29 +207,24 @@ def classify_ticket(ticket_text: str, max_attempts: int = 2) -> tuple[TicketClas
 The gate as a picture — the point that matters is that a *failed* repair does not
 degrade into "pass the best guess downstream anyway":
 
-```
-STAGE 1 VALIDATION GATE  (the seam between CLASSIFY and ROUTE)
+```mermaid
+flowchart TD
+    subgraph GATE["STAGE 1 VALIDATION GATE (the seam between CLASSIFY and ROUTE)"]
+        A(["classify_ticket(ticket_text)"]) --> B["TicketClassification.model_validate_json(raw)"]
+        B --> C{"valid?"}
+        C -->|"yes"| D(["return (classification, True)"])
+        C -->|"no"| E["attempt 2: append the validator's<br/>own error to the prompt, retry"]
+        E --> F{"valid?"}
+        F -->|"yes"| D
+        F -->|"no (both attempts exhausted)"| G(["return (FALLBACK_CLASSIFICATION, False)"])
+        D --> H["Stage 2 (ROUTE) may proceed"]
+        G --> I["caller HALTS, does not route (§4.3)"]
+    end
 
-  classify_ticket(ticket_text)
-        │
-        ▼
-  TicketClassification.model_validate_json(raw)
-        │
-   ┌────┴────┐
-   │  valid?  │
-   └────┬────┘
-     yes│   no
-        │    └──> attempt 2: append the validator's own error to the prompt, retry
-        │                          │
-        │                     yes  │  no
-        │                      ◄───┘
-        ▼
-   return (classification, True)  -->  Stage 2 (ROUTE) may proceed
-        
-   (both attempts exhausted)
-        │
-        ▼
-   return (FALLBACK_CLASSIFICATION, False)  -->  caller HALTS, does not route (§4.3)
+    classDef terminal fill:#e8f5e9,stroke:#4caf50,color:#1a1a1a
+    classDef errorPath fill:#ffe0e0,stroke:#d94a4a,color:#1a1a1a
+    class D,H terminal
+    class G,I errorPath
 ```
 
 Two properties worth naming explicitly, both carried over from Chapter 1's own

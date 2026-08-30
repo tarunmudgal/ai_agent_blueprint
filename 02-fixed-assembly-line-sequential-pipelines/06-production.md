@@ -89,13 +89,21 @@ def cost_breakdown(logs: list[StageLog]) -> None:
 cost_breakdown(run_logs)
 ```
 
-```
-PER-STAGE TOKENS — Risk Report Pipeline, one run against the incident memo
-
-  translate       ############################################  ~610 tok   <- dominant
-  summarize       ###############                                ~210 tok
-  extract_risks   #######                                         ~95 tok
-  format_bullets                                                    0 tok   (plain code)
+```mermaid
+flowchart LR
+    subgraph TOKENS["PER-STAGE TOKENS — Risk Report Pipeline, one run against the incident memo"]
+        direction LR
+        translate["translate<br/>~610 tok<br/>(dominant)"]
+        summarize["summarize<br/>~210 tok"]
+        extract_risks["extract_risks<br/>~95 tok"]
+        format_bullets["format_bullets<br/>0 tok<br/>(plain code)"]
+    end
+    classDef dominant fill:#ffe0e0,stroke:#d94a4a,color:#1a1a1a
+    classDef modelCall fill:#e0f0ff,stroke:#4a90d9,color:#1a1a1a
+    classDef noModelCall fill:#fff4e0,stroke:#d9954a,color:#1a1a1a
+    class translate dominant
+    class summarize,extract_risks modelCall
+    class format_bullets noModelCall
 ```
 
 `translate` dominates because it is the only stage that reads the *full* source document
@@ -143,19 +151,26 @@ Stages run sequentially by definition in this blueprint — that is the "fixed" 
 Assembly Line. A 4-stage pipeline is **at minimum four round trips**, paid one after
 another:
 
+```mermaid
+flowchart LR
+    classify["classify<br/>800 ms"]
+    route["route<br/>~0.1 ms<br/>(no call)"]
+    rewrite["rewrite<br/>1100 ms"]
+    log_summary["log_summary<br/>950 ms"]
+    classify --> route --> rewrite --> log_summary
+    TOTAL["total ≈ 2850 ms, floor"]
+    log_summary -.-> TOTAL
+    classDef modelCall fill:#e0f0ff,stroke:#4a90d9,color:#1a1a1a
+    classDef noModelCall fill:#fff4e0,stroke:#d9954a,color:#1a1a1a
+    classDef terminal fill:#e8f5e9,stroke:#4caf50,color:#1a1a1a
+    class classify,rewrite,log_summary modelCall
+    class route noModelCall
+    class TOTAL terminal
 ```
-LATENCY, ONE PIPELINE RUN — four stages, strictly sequential
 
-  classify   ████████████████████████                800 ms
-  route      ▏                                           0.1 ms  (no call)
-  rewrite    ████████████████████████████████████     1100 ms
-  log_summary███████████████████████████████            950 ms
-             └──────────────────────────────────────┘
-                     total ≈ 2850 ms, floor
-
-  Nothing here overlaps. Stage N+1 cannot start until Stage N's validated
-  output exists — that dependency is the whole point of "fixed order."
-```
+*LATENCY, ONE PIPELINE RUN — four stages, strictly sequential. Nothing here overlaps.
+Stage N+1 cannot start until Stage N's validated output exists — that dependency is
+the whole point of "fixed order."*
 
 Shortening any one stage (lower `thinking_level`, smaller input, Flash instead of Pro —
 Ch1 §6.3's levers, applied per stage) lowers the floor. **Running independent stages
@@ -182,19 +197,23 @@ triage note) leaks the internal `category`/`reason` fields into `customer_messag
 because the boundary rule about "untrusted data" was never tuned for this input shape.
 No per-stage eval catches that; only running the whole chain does.
 
-```
-              per-stage golden sets                    end-to-end integration eval
-        ┌───────────────────────────────┐        ┌───────────────────────────────┐
-        │ evals/golden/classify.jsonl    │        │ INCIDENT_GOLDEN                │
-        │ evals/golden/rewrite.jsonl      │──────▶│  ticket -> expected final route │
-        │ evals/golden/log_summary.jsonl  │  each  │  runs classify->route->rewrite  │
-        └───────────────────────────────┘  stage  │  ->log_summary end to end       │
-                     │                     passes  └───────────────────────────────┘
-                     ▼                    isolation              │
-        cheap, fast, one call per case                           ▼
-        catches most regressions early        catches composition bugs — every stage
-                                               can be individually correct and still
-                                               combine into the wrong final answer
+```mermaid
+flowchart TD
+    subgraph PS["per-stage golden sets"]
+        PS1["evals/golden/classify.jsonl"]
+        PS2["evals/golden/rewrite.jsonl"]
+        PS3["evals/golden/log_summary.jsonl"]
+    end
+    subgraph E2E["end-to-end integration eval"]
+        EG["INCIDENT_GOLDEN<br/>ticket -> expected final route<br/>runs classify->route->rewrite<br/>->log_summary end to end"]
+    end
+    PS -->|"each stage passes isolation"| E2E
+    PS --> PSNote["cheap, fast, one call per case<br/>catches most regressions early"]
+    E2E --> E2ENote["catches composition bugs — every stage<br/>can be individually correct and still<br/>combine into the wrong final answer"]
+    classDef modelCall fill:#e0f0ff,stroke:#4a90d9,color:#1a1a1a
+    classDef terminal fill:#e8f5e9,stroke:#4caf50,color:#1a1a1a
+    class PS1,PS2,PS3,EG modelCall
+    class PSNote,E2ENote terminal
 ```
 
 A minimal, runnable end-to-end eval for Pipeline B, checking only the property that
@@ -276,21 +295,21 @@ One JSON object per stage, `run_id` as the correlation key. Redact ticket/docume
 before logging, exactly as Chapter 1 §5.7 requires — the fields above are all metadata,
 never the payload.
 
-```
-logs/pipeline.jsonl  — unordered, append-only, many runs interleaved
-
-  {"run_id":"7e2f...","stage":"classify",   "elapsed_ms":812, "prompt_version":"1.0.0"}
-  {"run_id":"a91c...","stage":"classify",   "elapsed_ms":790, "prompt_version":"1.0.0"}
-  {"run_id":"7e2f...","stage":"route",      "elapsed_ms":0.1, "prompt_version":null}
-  {"run_id":"a91c...","stage":"route",      "elapsed_ms":0.1, "prompt_version":null}
-  {"run_id":"7e2f...","stage":"rewrite",    "elapsed_ms":1105,"prompt_version":"1.0.0"}
-  {"run_id":"a91c...","stage":"rewrite",    "elapsed_ms":980, "prompt_version":"1.0.0"}
-  {"run_id":"7e2f...","stage":"log_summary","elapsed_ms":940, "prompt_version":"1.0.0"}
-        │
-        ▼  filter run_id = "7e2f...", sort by arrival order
-  classify(812ms) -> route(0.1ms) -> rewrite(1105ms) -> log_summary(940ms)
-  one full, ordered trace of a single pipeline run — reconstructed entirely from
-  logs written by four unrelated log.info() calls, hours or weeks after the fact
+```mermaid
+flowchart TD
+    subgraph LOG["logs/pipeline.jsonl — unordered, append-only, many runs interleaved"]
+        L1["run_id=7e2f... stage=classify elapsed_ms=812 prompt_version=1.0.0"]
+        L2["run_id=a91c... stage=classify elapsed_ms=790 prompt_version=1.0.0"]
+        L3["run_id=7e2f... stage=route elapsed_ms=0.1 prompt_version=null"]
+        L4["run_id=a91c... stage=route elapsed_ms=0.1 prompt_version=null"]
+        L5["run_id=7e2f... stage=rewrite elapsed_ms=1105 prompt_version=1.0.0"]
+        L6["run_id=a91c... stage=rewrite elapsed_ms=980 prompt_version=1.0.0"]
+        L7["run_id=7e2f... stage=log_summary elapsed_ms=940 prompt_version=1.0.0"]
+    end
+    L1 & L2 & L3 & L4 & L5 & L6 & L7 --> F["filter run_id = 7e2f...<br/>sort by arrival order"]
+    F --> T["classify(812ms) -> route(0.1ms) -> rewrite(1105ms) -> log_summary(940ms)<br/>one full, ordered trace of a single pipeline run —<br/>reconstructed entirely from logs written by four<br/>unrelated log.info() calls, hours or weeks after the fact"]
+    classDef terminal fill:#e8f5e9,stroke:#4caf50,color:#1a1a1a
+    class T terminal
 ```
 
 That reconstruction is the entire payoff of §5.5's `run_id`: nothing about the logging

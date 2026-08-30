@@ -17,27 +17,35 @@ A Smart Intern can be grounded in exactly one thing: **the text you put in the p
 cannot look anything up. Every technique here is about making the model use the supplied
 evidence faithfully — none of them add evidence.
 
-```
-        WHAT SINGLE-SHOT CAN DO                 THE WALL              BLUEPRINT 3
- ┌──────────────────────────────────────┐        ║        ┌──────────────────────────┐
- │                                      │        ║        │                          │
- │  Quote a span from supplied text     │        ║        │  Fetch the right          │
- │  Attribute a claim to a section      │        ║        │  document from a corpus   │
- │  Say "not in the source"             │        ║        │                          │
- │  Refuse to answer outside the text   │        ║        │  Search across sources    │
- │  Flag its own low confidence         │        ║        │                          │
- │  Extract into a schema               │        ║        │  Cite a document you      │
- │                                      │        ║        │  never pasted in          │
- │  ── all verified against text        │        ║        │                          │
- │     YOU ALREADY HAD ──               │        ║        │  Stay correct as the      │
- │                                      │        ║        │  corpus changes           │
- └──────────────────────────────────────┘        ║        └──────────────────────────┘
-                                                 ║
-   You can verify these with a string            ║   Nothing in the prompt can
-   comparison in your own code.                  ║   reach across this line.
-                                                 ║
-   Cost: prompt tokens.                          ║   Cost: an index, an embedding
-                                                 ║   pipeline, and a retrieval step.
+```mermaid
+flowchart LR
+    subgraph SS["What single-shot CAN do"]
+        direction TB
+        S1["Quote a span from supplied text"]
+        S2["Attribute a claim to a section"]
+        S3["Say \"not in the source\""]
+        S4["Refuse to answer outside the text"]
+        S5["Flag its own low confidence"]
+        S6["Extract into a schema"]
+        S7["<i>All verified against text<br/>you already had</i>"]
+        S8["Verify with a string comparison<br/>in your own code.<br/>Cost: prompt tokens."]
+    end
+
+    WALL{{"<b>THE WALL</b><br/>Nothing in the prompt can<br/>reach across this line."}}
+
+    subgraph B3["Blueprint 3"]
+        direction TB
+        B3a["Fetch the right document<br/>from a corpus"]
+        B3b["Search across sources"]
+        B3c["Cite a document you<br/>never pasted in"]
+        B3d["Stay correct as the<br/>corpus changes"]
+        B3e["Cost: an index, an embedding<br/>pipeline, and a retrieval step."]
+    end
+
+    SS --> WALL --> B3
+
+    classDef wall fill:#fce8e6,stroke:#ea4335,color:#1a1a1a
+    class WALL wall
 ```
 
 Everything on the left is worth doing, and doing well, before you build anything on the

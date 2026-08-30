@@ -245,32 +245,21 @@ work better.
 
 ### How many, and the shape of the returns
 
-```
-FEW-SHOT: ACCURACY vs COST
 (shape is typical; the exact curve depends on task and model)
 
- accuracy                                                       cost
-   100% ┤                                                       (input tokens)
-        ┤                    ╭───────────●───────────●   ← plateau
-        ┤              ╭─────╯                                        ╱
-        ┤         ╭────╯                                            ╱
-    85% ┤     ╭───╯                                               ╱
-        ┤   ╭─╯                                                 ╱
-        ┤ ╭─╯                                                 ╱
-    70% ┤─╯                                                 ╱
-        ┤                                                 ╱
-        └──┬────┬────┬────┬────┬────┬────┬────┬────┬──  ╱
-           0    1    2    3    4    5    6    8   10   ╱
-           │    │         │              │           ╱
-           │    │         │              │         ╱
-        zero  biggest   most tasks    diminishing returns:
-        shot  single    plateau       cost keeps climbing linearly,
-              jump      here          accuracy does not
+```mermaid
+flowchart LR
+    E0["<b>0 examples</b><br/>zero-shot<br/>~70% accuracy"] -->|"biggest single jump"| E1["<b>1 example</b><br/>~85% accuracy"]
+    E1 -->|"still climbing"| E23["<b>2-3 examples</b><br/><i>most tasks plateau here</i>"]
+    E23 -->|"marginal gain"| E45["<b>4-5 examples</b><br/>accuracy near plateau"]
+    E45 -->|"diminishing returns"| E6["<b>6+ examples</b><br/>no further accuracy gain"]
 
-  COST grows LINEARLY with every example, forever.
-  ACCURACY plateaus, usually between 3 and 5.
-  Past the plateau you are paying full price for nothing.
+    classDef plateau fill:#e6f4ea,stroke:#34a853,color:#1a1a1a
+    class E23,E45,E6 plateau
 ```
+
+COST grows LINEARLY with every example, forever. ACCURACY plateaus, usually
+between 3 and 5. Past the plateau you are paying full price for nothing.
 
 Practical guidance:
 
@@ -596,25 +585,19 @@ where your code can actually branch on it.
 scaffolds** — supply the steps rather than leaving it to invent them.
 **Self-consistency** — sample several times and take the majority answer.
 
-```
-DIRECT ANSWER                      CHAIN OF THOUGHT
-─────────────────────────────      ────────────────────────────────────────
-Prompt:                            Prompt:
-  Classify this ticket.              Classify this ticket. First identify
-  "Webhook fired twice and we        what the customer is trying to do, then
-  charged the customer twice"        what is blocking them, then whether
-                                     money moved. Then give the category.
-Output:
-  integration                      Output:
-                                     The customer is reporting a duplicate
-                                     charge. The webhook is the mechanism,
-Fast. Cheap. Latched onto the        but the harm is a double charge, so
-salient token "webhook".             money has moved incorrectly.
-                                     Category: billing, urgency 4
-                                   ────────────────────────────────────────
-                                   Slower. More output tokens. Correct.
-                                   The intermediate text is also a
-                                   free audit trail.
+```mermaid
+flowchart TB
+    subgraph DA["Direct Answer"]
+        DAP["<b>Prompt</b><br/>Classify this ticket.<br/>'Webhook fired twice and we<br/>charged the customer twice'"] --> DAO["<b>Output</b><br/>integration<br/><br/><i>Fast. Cheap. Latched onto the<br/>salient token \"webhook\".</i>"]
+    end
+    subgraph COT["Chain of Thought"]
+        COP["<b>Prompt</b><br/>Classify this ticket. First identify<br/>what the customer is trying to do, then<br/>what is blocking them, then whether<br/>money moved. Then give the category."] --> COO["<b>Output</b><br/>The customer is reporting a duplicate<br/>charge. The webhook is the mechanism,<br/>but the harm is a double charge, so<br/>money has moved incorrectly.<br/>Category: billing, urgency 4<br/><br/><i>Slower. More output tokens. Correct.<br/>The intermediate text is also a<br/>free audit trail.</i>"]
+    end
+
+    classDef fast fill:#fef7e0,stroke:#f9ab00,color:#1a1a1a
+    classDef correct fill:#e6f4ea,stroke:#34a853,color:#1a1a1a
+    class DAO fast
+    class COO correct
 ```
 
 The mechanism is not mysterious: generated reasoning tokens become part of the context the
@@ -637,23 +620,17 @@ extremely common advice.
 
 ### The decision that replaces "should I add CoT?"
 
-```
-Is the task hard enough to need reasoning?
-        │
-        ├── No  ──►  thinking_level: "minimal" or "low"
-        │            No CoT in the prompt. Classification lives here.
-        │
-        └── Yes ──►  Do you need to SEE the reasoning?
-                          │
-                          ├── No, just want it correct
-                          │     ──►  raise thinking_level. Nothing in the prompt.
-                          │
-                          ├── Yes, for a human audit trail
-                          │     ──►  thinking_summaries: "auto"
-                          │
-                          └── Yes, and it must be a stable, parseable field
-                                ──►  put a `reasoning` field in your SCHEMA.
-                                     Ordered BEFORE the answer field.
+```mermaid
+flowchart TD
+    Q1{"Is the task hard<br/>enough to need reasoning?"}
+    Q1 -->|"No"| A1["thinking_level: 'minimal' or 'low'<br/>No CoT in the prompt.<br/>Classification lives here."]
+    Q1 -->|"Yes"| Q2{"Do you need to SEE<br/>the reasoning?"}
+    Q2 -->|"No, just want<br/>it correct"| A2["Raise thinking_level.<br/>Nothing in the prompt."]
+    Q2 -->|"Yes, for a human<br/>audit trail"| A3["thinking_summaries: 'auto'"]
+    Q2 -->|"Yes, and it must be a<br/>stable, parseable field"| A4["Put a <code>reasoning</code> field<br/>in your SCHEMA.<br/>Ordered BEFORE the answer field."]
+
+    classDef terminal fill:#e8f5e9,stroke:#4caf50,color:#1a1a1a
+    class A1,A2,A3,A4 terminal
 ```
 
 That last option is the one to reach for on structured tasks, and the field order is

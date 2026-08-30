@@ -178,8 +178,9 @@ Directly from the article's own example: *"taking a technical text, translating 
 summarizing it, and finally formatting its risks into a bulleted list."* Four stages,
 one document — the same post-incident review memo from Chapter 1.
 
-```
-technical text  →  translate  →  summarize  →  extract risks  →  bulleted list
+```mermaid
+flowchart LR
+    A(["technical text"]) --> B["translate"] --> C["summarize"] --> D["extract risks"] --> E(["bulleted list"])
 ```
 
 ### Pipeline B — The Incident Response Pipeline
@@ -187,8 +188,12 @@ technical text  →  translate  →  summarize  →  extract risks  →  bullete
 This is where Chapter 1 stops being background reading and starts being load-bearing.
 Every stage below is a prompt you already have — unmodified, chained.
 
-```
-support ticket  →  classify (Ch1)  →  route (plain code, no model)  →  rewrite (Ch1)  →  log summary (Ch1)
+```mermaid
+flowchart LR
+    A(["support ticket"]) --> B["classify<br/>(Ch1)"] --> C["route<br/>(plain code, no model)"] --> D["rewrite<br/>(Ch1)"] --> E(["log summary<br/>(Ch1)"])
+
+    classDef noModelCall fill:#fff4e0,stroke:#d9954a,color:#1a1a1a
+    class C noModelCall
 ```
 
 Three of these four stages are Chapter 1's exact prompts. The second stage is not a
@@ -205,22 +210,14 @@ across blueprints is not a nice-to-have, it's the normal way this actually gets 
 
 ## How to read this
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│  New to this blueprint?                                         │
-│  → Part I → Part II → Part III → stop.                          │
-│    That's the working core: vocabulary, what a pipeline is,     │
-│    and how to build one with a real contract at every seam.     │
-├─────────────────────────────────────────────────────────────────┤
-│  Already comfortable, want the craft?                           │
-│  → Part III → Part IV → Part VIII.                               │
-│    Skim Part I's glossary card to align on vocabulary first.    │
-├─────────────────────────────────────────────────────────────────┤
-│  Shipping something to production?                               │
-│  → Part V → Part VI → Part VII.                                  │
-│    Packaging a pipeline, its cost/latency math, and the honest   │
-│    line between "fixed" and "you built an agent by accident."    │
-└─────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    Q1{"New to this blueprint?"} --> P1["Part I -> Part II -> Part III -> stop<br/>The working core: vocabulary, what a<br/>pipeline is, and how to build one with a<br/>real contract at every seam"]
+    Q2{"Already comfortable,<br/>want the craft?"} --> P2["Part III -> Part IV -> Part VIII<br/>Skim Part I's glossary card to align<br/>on vocabulary first"]
+    Q3{"Shipping something<br/>to production?"} --> P3["Part V -> Part VI -> Part VII<br/>Packaging a pipeline, its cost/latency<br/>math, and the honest line between<br/>'fixed' and 'you built an agent by accident'"]
+
+    classDef terminal fill:#e8f5e9,stroke:#4caf50,color:#1a1a1a
+    class P1,P2,P3 terminal
 ```
 
 ---
@@ -367,19 +364,18 @@ risk list out, four stages in between.
 `document_text` — the post-incident review memo from the session preamble — is our source.
 The pipeline runs it through four fixed stages, in this order, always:
 
-```
-document_text
-     │
-     ▼
-┌─────────────┐    ┌─────────────┐    ┌──────────────┐    ┌─────────────┐
-│  STAGE 1     │    │  STAGE 2     │    │  STAGE 3      │    │  STAGE 4     │
-│  Translate   │───▶│  Summarize   │───▶│  Extract      │───▶│  Format as   │
-│  → Spanish   │    │  → 6-sent.   │    │  risks        │    │  bullets     │
-│              │    │    exec sum. │    │  (structured) │    │  (Markdown)  │
-└─────────────┘    └─────────────┘    └──────────────┘    └─────────────┘
-                                                                    │
-                                                                    ▼
-                                                          final bulleted list
+```mermaid
+flowchart TD
+    D(["document_text"]) --> S1["Stage 1: Translate<br/>-> Spanish"]
+    S1 --> S2["Stage 2: Summarize<br/>-> 6-sentence exec summary"]
+    S2 --> S3["Stage 3: Extract risks<br/>(structured)"]
+    S3 --> S4["Stage 4: Format as bullets<br/>(Markdown)"]
+    S4 --> F(["final bulleted list"])
+
+    classDef modelCall fill:#e0f0ff,stroke:#4a90d9,color:#1a1a1a
+    classDef terminal fill:#e8f5e9,stroke:#4caf50,color:#1a1a1a
+    class S1,S2,S3,S4 modelCall
+    class D,F terminal
 ```
 
 Before decomposing it, watch it run as a black box. This is real, runnable code — the full
@@ -492,18 +488,14 @@ def looks_like_pure_translation(text: str) -> bool:
 print(looks_like_pure_translation(loose_translate))   # False — caught at the seam
 ```
 
-```
-STAGE N                          SEAM                          STAGE N+1
-┌────────────┐         ┌───────────────────────────┐         ┌────────────┐
-│  produces   │────────▶│  output contract  ==?     │────────▶│  consumes   │
-│  raw output │         │  input contract           │         │  as truth   │
-└────────────┘         │                            │         └────────────┘
-                        │   ┌────────────────────┐   │
-                        │   │  VALIDATION GATE    │   │
-                        │   │  reject / repair /  │   │
-                        │   │  pass               │   │
-                        │   └────────────────────┘   │
-                        └───────────────────────────┘
+```mermaid
+flowchart LR
+    N["STAGE N<br/>produces raw output"] --> G{"SEAM<br/>output contract == input contract?"}
+    G --> V[["VALIDATION GATE<br/>reject / repair / pass"]]
+    V --> NP1["STAGE N+1<br/>consumes as truth"]
+
+    classDef errorPath fill:#ffe0e0,stroke:#d94a4a,color:#1a1a1a
+    class V errorPath
 ```
 
 ---
@@ -551,19 +543,18 @@ This distinction is easy to get backwards, because the Interactions API has a re
 for multi-turn state (`previous_interaction_id`), and it is tempting to reach for it here.
 Don't. Here is why:
 
-```
-CONVERSATION (previous_interaction_id)          PIPELINE (this chapter)
-┌─────────────────────────────┐                ┌─────────────────────────────┐
-│ turn 1 ──▶ turn 2 ──▶ turn 3 │                │ stage 1 ──▶ stage 2 ──▶ ... │
-│   the API remembers          │                │   YOUR CODE remembers        │
-│   turn 1 for you              │                │   stage 1's output, and      │
-│   via previous_interaction_id │                │   decides what stage 2 sees  │
-│                               │                │                               │
-│ same task, same voice,       │                │ four DIFFERENT tasks:        │
-│ deepening one exchange        │                │ translate, summarize,        │
-│                               │                │ extract, format —            │
-│                               │                │ each with ITS OWN contract   │
-└─────────────────────────────┘                └─────────────────────────────┘
+```mermaid
+flowchart LR
+    subgraph CONV["CONVERSATION (previous_interaction_id)"]
+        direction LR
+        T1["turn 1"] --> T2["turn 2"] --> T3["turn 3"]
+        CN["the API remembers turn 1 for you<br/>via previous_interaction_id<br/><br/>same task, same voice,<br/>deepening one exchange"]
+    end
+    subgraph PIPE["PIPELINE (this chapter)"]
+        direction LR
+        S1["stage 1"] --> S2["stage 2"] --> S3["..."]
+        PN["YOUR CODE remembers stage 1's<br/>output, and decides what stage 2 sees<br/><br/>four DIFFERENT tasks: translate,<br/>summarize, extract, format —<br/>each with ITS OWN contract"]
+    end
 ```
 
 Every stage in this chapter is called with `store=False` and no `previous_interaction_id`.
@@ -589,22 +580,19 @@ Illustrative numbers for the Risk Report Pipeline (marked illustrative — get r
 for your own documents with `count_tokens` and by timing your own calls, exactly as §1.1
 showed):
 
-```
-COST COMPOSITION (illustrative token counts)
-Stage 1  Translate      ██████████████████████         ~900 in / ~950 out
-Stage 2  Summarize      ████████████████               ~950 in / ~180 out
-Stage 3  Extract risks  ██████████                     ~180 in / ~120 out
-Stage 4  Format bullets ██████                          ~120 in / ~90 out
-                         ────────────────────────────────────────────────
-                         PIPELINE TOTAL  ~2,150 in / ~1,340 out tokens
+```mermaid
+flowchart TD
+    subgraph COST["Cost composition (illustrative token counts)"]
+        direction LR
+        C1["Stage 1: Translate<br/>~900 in / ~950 out"] --> C2["Stage 2: Summarize<br/>~950 in / ~180 out"] --> C3["Stage 3: Extract risks<br/>~180 in / ~120 out"] --> C4["Stage 4: Format bullets<br/>~120 in / ~90 out"] --> CT(["Pipeline total<br/>~2,150 in / ~1,340 out tokens"])
+    end
+    subgraph LAT["Latency composition (illustrative, sequential calls, no streaming)"]
+        direction LR
+        L1["Stage 1<br/>~2.1s"] --> L2["Stage 2<br/>~1.5s"] --> L3["Stage 3<br/>~0.9s"] --> L4["Stage 4<br/>~0.6s"] --> LT(["Pipeline total<br/>~5.1s"])
+    end
 
-LATENCY COMPOSITION (illustrative, sequential calls, no streaming)
-Stage 1  ████████████████████  ~2.1s
-Stage 2  ██████████████        ~1.5s
-Stage 3  ████████               ~0.9s
-Stage 4  ██████                 ~0.6s
-                         ─────────────
-                         PIPELINE TOTAL  ~5.1s
+    classDef terminal fill:#e8f5e9,stroke:#4caf50,color:#1a1a1a
+    class CT,LT terminal
 ```
 
 **One mega-prompt asking for translation, summary, risks, and bullets in a single call would
@@ -630,14 +618,19 @@ A pipeline has a new one — **partial failure**: stage 1 succeeds, stage 2 fail
 document is now translated but not summarized. That is a different state than "nothing
 happened," and treating it as equivalent to total failure loses real, already-paid-for work.
 
-```
-Stage 1 ✅ translate  ──▶  Stage 2 ❌ summarize  ──▶  Stage 3 ⬜ (never ran)  ──▶  Stage 4 ⬜
-                              │
-                              ▼
-                     What do you do with the
-                     translated text you already
-                     have? Discard it? Retry just
-                     stage 2? Retry from stage 1?
+```mermaid
+flowchart LR
+    S1["Stage 1<br/>translate<br/>SUCCEEDED"] --> S2["Stage 2<br/>summarize<br/>FAILED"]
+    S2 --> S3["Stage 3<br/>(never ran)"]
+    S3 --> S4["Stage 4<br/>(never ran)"]
+    S2 --> Q{"What do you do with the<br/>translated text you already have?<br/>Discard it? Retry just stage 2?<br/>Retry from stage 1?"}
+
+    classDef terminal fill:#e8f5e9,stroke:#4caf50,color:#1a1a1a
+    classDef errorPath fill:#ffe0e0,stroke:#d94a4a,color:#1a1a1a
+    classDef neverRan fill:#eeeeee,stroke:#999999,color:#666666
+    class S1 terminal
+    class S2 errorPath
+    class S3,S4 neverRan
 ```
 
 The question a partial failure forces you to answer, every time: **do you retry the failed
@@ -734,26 +727,22 @@ anymore.
 
 Same logic, software version:
 
-```
-FIXED ASSEMBLY LINE                         NOT AN ASSEMBLY LINE ANYMORE
-(order decided at design time)              (order decided at run time, by a model)
+```mermaid
+flowchart LR
+    subgraph FIXED["FIXED ASSEMBLY LINE (order decided at design time) = Blueprint 2"]
+        direction TD
+        F1["Stage 1"] --> F2["Stage 2<br/>always runs, always next"]
+        F2 --> F3["Stage 3<br/>always runs, always next"]
+        F3 --> F4["Stage 4<br/>always runs, always last"]
+    end
+    subgraph NOTFIXED["NOT AN ASSEMBLY LINE ANYMORE (order decided at run time, by a model) = Blueprint 4 (The Autopilot Worker)"]
+        direction TD
+        N1["Stage 1"] --> N2{"Model reads Stage 1's OUTPUT<br/>and picks what runs next"}
+        N2 --> N3["Stage 2A? Stage 2B?<br/>Skip to Stage 4?<br/>(decided by the model,<br/>not by you, not in advance)"]
+    end
 
-┌───────┐                                   ┌───────┐
-│Stage 1│                                   │Stage 1│
-└───┬───┘                                   └───┬───┘
-    ▼                                           ▼
-┌───────┐                                   ┌─────────────────────┐
-│Stage 2│  always runs, always next          │ Model reads Stage 1's│
-└───┬───┘                                   │ OUTPUT and picks     │
-    ▼                                           │ what runs next     │
-┌───────┐                                   └──────────┬───────────┘
-│Stage 3│  always runs, always next                     ▼
-└───┬───┘                                       Stage 2A? Stage 2B?
-    ▼                                           Skip to Stage 4?
-┌───────┐                                       (decided by the model,
-│Stage 4│  always runs, always last              not by you, not in advance)
-└───────┘
-= Blueprint 2                                  = Blueprint 4 (The Autopilot Worker)
+    classDef errorPath fill:#ffe0e0,stroke:#d94a4a,color:#1a1a1a
+    class N2,N3 errorPath
 ```
 
 **The core architectural constraint: order is fixed at design time, not decided at run
@@ -922,41 +911,18 @@ isolate, a need to reuse the intermediate value, a stage that needs its own retr
 Every stage, model call or not, has the same four parts. Applied concretely to Stage 1
 (translate) of the Risk Report Pipeline:
 
-```
-┌──────────────────────────────────────────────────────────────────────┐
-│                         STAGE 1 — TRANSLATE                          │
-│                                                                        │
-│  INPUT CONTRACT                                                       │
-│  ┌──────────────────────────────────────────────┐                    │
-│  │ document_text: str                            │                    │
-│  │ non-empty, English source prose                │                    │
-│  └──────────────────────────────────────────────┘                    │
-│                          │                                             │
-│                          ▼                                             │
-│  PROMPT                                                               │
-│  ┌──────────────────────────────────────────────┐                    │
-│  │ system_instruction: "Translate the input to    │                    │
-│  │ Spanish. Return only the translation — no      │                    │
-│  │ preamble, no framing, no commentary."          │                    │
-│  │ input: document_text                            │                    │
-│  └──────────────────────────────────────────────┘                    │
-│                          │                                             │
-│                          ▼                                             │
-│  OUTPUT CONTRACT                                                      │
-│  ┌──────────────────────────────────────────────┐                    │
-│  │ str: Spanish-language prose ONLY, no English   │                    │
-│  │ chat framing, non-empty                        │                    │
-│  └──────────────────────────────────────────────┘                    │
-│                          │                                             │
-│                          ▼                                             │
-│  VALIDATION GATE                                                      │
-│  ┌──────────────────────────────────────────────┐                    │
-│  │ looks_like_pure_translation(text) -> bool      │                    │
-│  │ (§1.3) — reject chat-assistant preamble         │                    │
-│  │ before this value crosses the seam into        │                    │
-│  │ Stage 2                                         │                    │
-│  └──────────────────────────────────────────────┘                    │
-└──────────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph ST1["STAGE 1 — TRANSLATE"]
+        IC["INPUT CONTRACT<br/>document_text: str<br/>non-empty, English source prose"]
+        PR["PROMPT<br/>system_instruction: 'Translate the input to<br/>Spanish. Return only the translation — no<br/>preamble, no framing, no commentary.'<br/>input: document_text"]
+        OC["OUTPUT CONTRACT<br/>str: Spanish-language prose ONLY,<br/>no English chat framing, non-empty"]
+        VG[["VALIDATION GATE<br/>looks_like_pure_translation(text) -> bool<br/>(§1.3) — reject chat-assistant preamble<br/>before this value crosses the seam into Stage 2"]]
+        IC --> PR --> OC --> VG
+    end
+
+    classDef modelCall fill:#e0f0ff,stroke:#4a90d9,color:#1a1a1a
+    class PR modelCall
 ```
 
 The prompt is the smallest part of this diagram, deliberately. Chapter 1 spent its whole
@@ -1366,29 +1332,24 @@ def classify_ticket(ticket_text: str, max_attempts: int = 2) -> tuple[TicketClas
 The gate as a picture — the point that matters is that a *failed* repair does not
 degrade into "pass the best guess downstream anyway":
 
-```
-STAGE 1 VALIDATION GATE  (the seam between CLASSIFY and ROUTE)
+```mermaid
+flowchart TD
+    subgraph GATE["STAGE 1 VALIDATION GATE (the seam between CLASSIFY and ROUTE)"]
+        A(["classify_ticket(ticket_text)"]) --> B["TicketClassification.model_validate_json(raw)"]
+        B --> C{"valid?"}
+        C -->|"yes"| D(["return (classification, True)"])
+        C -->|"no"| E["attempt 2: append the validator's<br/>own error to the prompt, retry"]
+        E --> F{"valid?"}
+        F -->|"yes"| D
+        F -->|"no (both attempts exhausted)"| G(["return (FALLBACK_CLASSIFICATION, False)"])
+        D --> H["Stage 2 (ROUTE) may proceed"]
+        G --> I["caller HALTS, does not route (§4.3)"]
+    end
 
-  classify_ticket(ticket_text)
-        │
-        ▼
-  TicketClassification.model_validate_json(raw)
-        │
-   ┌────┴────┐
-   │  valid?  │
-   └────┬────┘
-     yes│   no
-        │    └──> attempt 2: append the validator's own error to the prompt, retry
-        │                          │
-        │                     yes  │  no
-        │                      ◄───┘
-        ▼
-   return (classification, True)  -->  Stage 2 (ROUTE) may proceed
-        
-   (both attempts exhausted)
-        │
-        ▼
-   return (FALLBACK_CLASSIFICATION, False)  -->  caller HALTS, does not route (§4.3)
+    classDef terminal fill:#e8f5e9,stroke:#4caf50,color:#1a1a1a
+    classDef errorPath fill:#ffe0e0,stroke:#d94a4a,color:#1a1a1a
+    class D,H terminal
+    class G,I errorPath
 ```
 
 Two properties worth naming explicitly, both carried over from Chapter 1's own
@@ -2072,21 +2033,11 @@ step-function pattern (validate input → call or don't call the model → valid
 already satisfies that definition on its own. `Stage` is just enough structure to hold
 one of those functions next to the metadata a pipeline needs to run and log it.
 
-```
-┌───────────────────────────────┐          ┌──────────────────────────────────┐
-│ Stage                         │          │ Pipeline                         │
-├───────────────────────────────┤          ├──────────────────────────────────┤
-│ name: str                     │          │ name: str                        │
-│ prompt_name: str | None       │  1..N    │ stages: list[Stage]              │
-│ prompt_version: str | None    │◀────────▶│                                   │
-│ model: str | None             │          │ run(initial_input)                │
-│ step: (validated input) ->    │          │   -> (final_output, list[StageLog])│
-│       (validated output,      │          │                                   │
-│        usage dict)            │          │ threads stage N's validated output│
-│                                │          │ into stage N+1's input; halts and │
-│ run(input) -> (output, usage) │          │ raises on the first unrecoverable │
-└───────────────────────────────┘          │ failure (§4.3's quarantine rule)  │
-                                            └──────────────────────────────────┘
+```mermaid
+flowchart LR
+    Stage["**Stage**<br/>name: str<br/>prompt_name: str | None<br/>prompt_version: str | None<br/>model: str | None<br/>step: (validated input) -&gt;<br/>(validated output, usage dict)<br/>run(input) -&gt; (output, usage)"]
+    Pipeline["**Pipeline**<br/>name: str<br/>stages: list[Stage]<br/>run(initial_input) -&gt;<br/>(final_output, list[StageLog])<br/>threads stage N's validated output into<br/>stage N+1's input; halts and raises on the<br/>first unrecoverable failure (§4.3's quarantine rule)"]
+    Stage <-->|"1..N"| Pipeline
 ```
 
 `prompt_name`, `prompt_version` and `model` are all `| None` on purpose. Pipeline B's
@@ -2609,25 +2560,28 @@ pins down *one* prompt. A pipeline manifest is one level up: it lists which stag
 which prompt file at which version, so the pipeline's exact behavior — not just one
 call's — is reconstructable and diffable later.
 
-```
-risk_report.manifest.yaml                    prompts/risk_report/
-┌─────────────────────────────┐              ┌─────────────────────────────┐
-│ pipeline: risk_report        │              │ 01_translate.system.md      │
-│ version: 1.0.0               │              │   id: translate             │
-│ stages:                      │              │   version: 1.0.0            │
-│  - name: translate           │── prompt ───▶│                              │
-│    prompt: .../01_translate  │              ├─────────────────────────────┤
-│    prompt_version: 1.0.0     │              │ 02_summarize.system.md      │
-│    model: gemini-3.5-flash   │              ├─────────────────────────────┤
-│  - name: summarize            │── prompt ───▶│ 03_extract_risks.system.md   │
-│    ...                        │              ├─────────────────────────────┤
-│  - name: extract_risks        │── prompt ───▶│ (no file for format_bullets  │
-│    ...                        │              │  — null in the manifest,    │
-│  - name: format_bullets        │── (none) ───│  plain Python, see §5.4)     │
-│    prompt: null                │              └─────────────────────────────┘
-│    prompt_version: null        │
-│    model: null                 │
-└─────────────────────────────┘
+```mermaid
+flowchart LR
+    subgraph M["risk_report.manifest.yaml"]
+        M0["pipeline: risk_report<br/>version: 1.0.0"]
+        M1["stage: translate<br/>prompt: .../01_translate<br/>prompt_version: 1.0.0<br/>model: gemini-3.5-flash"]
+        M2["stage: summarize<br/>..."]
+        M3["stage: extract_risks<br/>..."]
+        M4["stage: format_bullets<br/>prompt: null<br/>prompt_version: null<br/>model: null"]
+    end
+    subgraph P["prompts/risk_report/"]
+        P1["01_translate.system.md<br/>id: translate<br/>version: 1.0.0"]
+        P2["02_summarize.system.md"]
+        P3["03_extract_risks.system.md"]
+        P4["(no file for format_bullets —<br/>null in the manifest, plain Python, see §5.4)"]
+    end
+    M1 -->|"prompt"| P1
+    M2 -->|"prompt"| P2
+    M3 -->|"prompt"| P3
+    M4 -->|"(none)"| P4
+
+    classDef noModelCall fill:#fff4e0,stroke:#d9954a,color:#1a1a1a
+    class M4,P4 noModelCall
 ```
 
 ```python
@@ -2724,19 +2678,21 @@ A single pipeline run produces one `StageLog` per stage (§5.2). What ties them 
 *one* run's story is `run_id` — generated once, inside `Pipeline.run`, and carried on
 every stage's log line for that execution.
 
-```
-                          run_id = "7e2f4b1a-9c3d-4e11-..."
-                                       │
-        ┌──────────────┬──────────────┼──────────────┬──────────────┐
-        ▼              ▼              ▼              ▼              ▼
-   STAGE classify  STAGE route    STAGE rewrite  STAGE log_summary  (run
-   run_id=7e2f...  run_id=7e2f... run_id=7e2f...  run_id=7e2f...    complete)
-   in=210 out=40   in=0   out=0   in=340 out=95   in=520 out=110
-        │              │              │              │
-        └──────────────┴──────────────┴──────────────┴──── one line per stage,
-                                                              same run_id — the
-                                                              only join key you
-                                                              need later (§6.4)
+```mermaid
+flowchart TD
+    R["run_id = \"7e2f4b1a-9c3d-4e11-...\""]
+    R --> S1["STAGE classify<br/>run_id=7e2f...<br/>in=210 out=40"]
+    R --> S2["STAGE route<br/>run_id=7e2f...<br/>in=0 out=0"]
+    R --> S3["STAGE rewrite<br/>run_id=7e2f...<br/>in=340 out=95"]
+    R --> S4["STAGE log_summary<br/>run_id=7e2f...<br/>in=520 out=110"]
+    S1 --> D["one line per stage, same run_id —<br/>the only join key you need later (§6.4)"]
+    S2 --> D
+    S3 --> D
+    S4 --> D
+    D --> C(["run complete"])
+
+    classDef noModelCall fill:#fff4e0,stroke:#d9954a,color:#1a1a1a
+    class S2 noModelCall
 ```
 
 This directly extends Chapter 1 §6.2's token-cost-engineering material: there, the unit
@@ -2927,13 +2883,21 @@ def cost_breakdown(logs: list[StageLog]) -> None:
 cost_breakdown(run_logs)
 ```
 
-```
-PER-STAGE TOKENS — Risk Report Pipeline, one run against the incident memo
-
-  translate       ############################################  ~610 tok   <- dominant
-  summarize       ###############                                ~210 tok
-  extract_risks   #######                                         ~95 tok
-  format_bullets                                                    0 tok   (plain code)
+```mermaid
+flowchart LR
+    subgraph TOKENS["PER-STAGE TOKENS — Risk Report Pipeline, one run against the incident memo"]
+        direction LR
+        translate["translate<br/>~610 tok<br/>(dominant)"]
+        summarize["summarize<br/>~210 tok"]
+        extract_risks["extract_risks<br/>~95 tok"]
+        format_bullets["format_bullets<br/>0 tok<br/>(plain code)"]
+    end
+    classDef dominant fill:#ffe0e0,stroke:#d94a4a,color:#1a1a1a
+    classDef modelCall fill:#e0f0ff,stroke:#4a90d9,color:#1a1a1a
+    classDef noModelCall fill:#fff4e0,stroke:#d9954a,color:#1a1a1a
+    class translate dominant
+    class summarize,extract_risks modelCall
+    class format_bullets noModelCall
 ```
 
 `translate` dominates because it is the only stage that reads the *full* source document
@@ -2981,19 +2945,26 @@ Stages run sequentially by definition in this blueprint — that is the "fixed" 
 Assembly Line. A 4-stage pipeline is **at minimum four round trips**, paid one after
 another:
 
+```mermaid
+flowchart LR
+    classify["classify<br/>800 ms"]
+    route["route<br/>~0.1 ms<br/>(no call)"]
+    rewrite["rewrite<br/>1100 ms"]
+    log_summary["log_summary<br/>950 ms"]
+    classify --> route --> rewrite --> log_summary
+    TOTAL["total ≈ 2850 ms, floor"]
+    log_summary -.-> TOTAL
+    classDef modelCall fill:#e0f0ff,stroke:#4a90d9,color:#1a1a1a
+    classDef noModelCall fill:#fff4e0,stroke:#d9954a,color:#1a1a1a
+    classDef terminal fill:#e8f5e9,stroke:#4caf50,color:#1a1a1a
+    class classify,rewrite,log_summary modelCall
+    class route noModelCall
+    class TOTAL terminal
 ```
-LATENCY, ONE PIPELINE RUN — four stages, strictly sequential
 
-  classify   ████████████████████████                800 ms
-  route      ▏                                           0.1 ms  (no call)
-  rewrite    ████████████████████████████████████     1100 ms
-  log_summary███████████████████████████████            950 ms
-             └──────────────────────────────────────┘
-                     total ≈ 2850 ms, floor
-
-  Nothing here overlaps. Stage N+1 cannot start until Stage N's validated
-  output exists — that dependency is the whole point of "fixed order."
-```
+*LATENCY, ONE PIPELINE RUN — four stages, strictly sequential. Nothing here overlaps.
+Stage N+1 cannot start until Stage N's validated output exists — that dependency is
+the whole point of "fixed order."*
 
 Shortening any one stage (lower `thinking_level`, smaller input, Flash instead of Pro —
 Ch1 §6.3's levers, applied per stage) lowers the floor. **Running independent stages
@@ -3020,19 +2991,23 @@ triage note) leaks the internal `category`/`reason` fields into `customer_messag
 because the boundary rule about "untrusted data" was never tuned for this input shape.
 No per-stage eval catches that; only running the whole chain does.
 
-```
-              per-stage golden sets                    end-to-end integration eval
-        ┌───────────────────────────────┐        ┌───────────────────────────────┐
-        │ evals/golden/classify.jsonl    │        │ INCIDENT_GOLDEN                │
-        │ evals/golden/rewrite.jsonl      │──────▶│  ticket -> expected final route │
-        │ evals/golden/log_summary.jsonl  │  each  │  runs classify->route->rewrite  │
-        └───────────────────────────────┘  stage  │  ->log_summary end to end       │
-                     │                     passes  └───────────────────────────────┘
-                     ▼                    isolation              │
-        cheap, fast, one call per case                           ▼
-        catches most regressions early        catches composition bugs — every stage
-                                               can be individually correct and still
-                                               combine into the wrong final answer
+```mermaid
+flowchart TD
+    subgraph PS["per-stage golden sets"]
+        PS1["evals/golden/classify.jsonl"]
+        PS2["evals/golden/rewrite.jsonl"]
+        PS3["evals/golden/log_summary.jsonl"]
+    end
+    subgraph E2E["end-to-end integration eval"]
+        EG["INCIDENT_GOLDEN<br/>ticket -> expected final route<br/>runs classify->route->rewrite<br/>->log_summary end to end"]
+    end
+    PS -->|"each stage passes isolation"| E2E
+    PS --> PSNote["cheap, fast, one call per case<br/>catches most regressions early"]
+    E2E --> E2ENote["catches composition bugs — every stage<br/>can be individually correct and still<br/>combine into the wrong final answer"]
+    classDef modelCall fill:#e0f0ff,stroke:#4a90d9,color:#1a1a1a
+    classDef terminal fill:#e8f5e9,stroke:#4caf50,color:#1a1a1a
+    class PS1,PS2,PS3,EG modelCall
+    class PSNote,E2ENote terminal
 ```
 
 A minimal, runnable end-to-end eval for Pipeline B, checking only the property that
@@ -3114,21 +3089,21 @@ One JSON object per stage, `run_id` as the correlation key. Redact ticket/docume
 before logging, exactly as Chapter 1 §5.7 requires — the fields above are all metadata,
 never the payload.
 
-```
-logs/pipeline.jsonl  — unordered, append-only, many runs interleaved
-
-  {"run_id":"7e2f...","stage":"classify",   "elapsed_ms":812, "prompt_version":"1.0.0"}
-  {"run_id":"a91c...","stage":"classify",   "elapsed_ms":790, "prompt_version":"1.0.0"}
-  {"run_id":"7e2f...","stage":"route",      "elapsed_ms":0.1, "prompt_version":null}
-  {"run_id":"a91c...","stage":"route",      "elapsed_ms":0.1, "prompt_version":null}
-  {"run_id":"7e2f...","stage":"rewrite",    "elapsed_ms":1105,"prompt_version":"1.0.0"}
-  {"run_id":"a91c...","stage":"rewrite",    "elapsed_ms":980, "prompt_version":"1.0.0"}
-  {"run_id":"7e2f...","stage":"log_summary","elapsed_ms":940, "prompt_version":"1.0.0"}
-        │
-        ▼  filter run_id = "7e2f...", sort by arrival order
-  classify(812ms) -> route(0.1ms) -> rewrite(1105ms) -> log_summary(940ms)
-  one full, ordered trace of a single pipeline run — reconstructed entirely from
-  logs written by four unrelated log.info() calls, hours or weeks after the fact
+```mermaid
+flowchart TD
+    subgraph LOG["logs/pipeline.jsonl — unordered, append-only, many runs interleaved"]
+        L1["run_id=7e2f... stage=classify elapsed_ms=812 prompt_version=1.0.0"]
+        L2["run_id=a91c... stage=classify elapsed_ms=790 prompt_version=1.0.0"]
+        L3["run_id=7e2f... stage=route elapsed_ms=0.1 prompt_version=null"]
+        L4["run_id=a91c... stage=route elapsed_ms=0.1 prompt_version=null"]
+        L5["run_id=7e2f... stage=rewrite elapsed_ms=1105 prompt_version=1.0.0"]
+        L6["run_id=a91c... stage=rewrite elapsed_ms=980 prompt_version=1.0.0"]
+        L7["run_id=7e2f... stage=log_summary elapsed_ms=940 prompt_version=1.0.0"]
+    end
+    L1 & L2 & L3 & L4 & L5 & L6 & L7 --> F["filter run_id = 7e2f...<br/>sort by arrival order"]
+    F --> T["classify(812ms) -> route(0.1ms) -> rewrite(1105ms) -> log_summary(940ms)<br/>one full, ordered trace of a single pipeline run —<br/>reconstructed entirely from logs written by four<br/>unrelated log.info() calls, hours or weeks after the fact"]
+    classDef terminal fill:#e8f5e9,stroke:#4caf50,color:#1a1a1a
+    class T terminal
 ```
 
 That reconstruction is the entire payoff of §5.5's `run_id`: nothing about the logging
@@ -3465,22 +3440,22 @@ def run_risk_report_pipeline(
 
 The sequence, drawn once as a whole:
 
-```
-USER                PIPELINE                       MODEL (stage N)
- │                      │                                 │
- │  "run pipeline"      │                                 │
- │─────────────────────▶│                                 │
- │                      │  on_progress("Stage 1 of 4:      │
- │◀─── progress ────────│   translating...")               │
- │                      │──── interactions.create ────────▶│
- │                      │◀─── step.delta (text)*  ─────────│   *stream=True path only
- │                      │◀─── interaction.completed ───────│
- │                      │  on_progress("Stage 2 of 4:      │
- │◀─── progress ────────│   summarizing...")               │
- │                      │──── interactions.create ────────▶│
- │                      │◀────────────────────────────────│
- │                      │  ... stages 3, 4 ...              │
- │◀─── final bullets ───│                                 │
+```mermaid
+sequenceDiagram
+    participant User
+    participant Pipeline
+    participant Model as Model (stage N)
+
+    User->>Pipeline: "run pipeline"
+    Pipeline-->>User: progress: "Stage 1 of 4: translating..."
+    Pipeline->>Model: interactions.create
+    Model-->>Pipeline: step.delta (text)* (*stream=True path only)
+    Model-->>Pipeline: interaction.completed
+    Pipeline-->>User: progress: "Stage 2 of 4: summarizing..."
+    Pipeline->>Model: interactions.create
+    Model-->>Pipeline: interaction.completed
+    Note over Pipeline,Model: ... stages 3, 4 ...
+    Pipeline-->>User: final bullets
 ```
 
 **Best used for:** a synchronous request a human is actively watching — a chat UI, a
@@ -4091,40 +4066,61 @@ The article's tree told you where to start. Chapter 1's own §8.4 grafted diagno
 onto it from Blueprint 1. This is the same tree, the position marker moved one level
 down, with this chapter's diagnostics grafted from Blueprint 2:
 
-```
- [ How complex is the task? ]
- │
- ├── Simple / One-turn text? ──────> [ 1. The Smart Intern ]
- │
- ├── Rigid Step-by-Step flow? ─────> [ 2. The Fixed Assembly Line ]
- │                                     │
- │                                     │  ... you are here. Stay until a signal fires.
- │                                     │
- │                                     ├─ F1: needs facts no stage was ever given
- │                                     │      every stage individually correct, answer
- │                                     │      still wrong - nothing to ground it in
- │                                     │      └──────────────────────────┐
- │                                     │                                 v
- ├── Needs private / fresh data? ──> [ 3. The Intelligent Library ]  <───┘
- │                                     │
- │                                     ├─ F2: a stage's output picks the next stage
- │                                     │      from a set you didn't fully enumerate
- │                                     │      set of stages no longer fixed at design time
- │                                     │      └──────────────────────────┐
- │                                     │                                 v
- ├── Dynamic / Unpredictable tools? > [ 4. The Autopilot Worker ]    <───┘
- │                                     │      ^ blast radius jumps here (Ch1 §7.2.5)
- │                                     │
- │                                     ├─ F3: stages answer to conflicting objectives
- │                                     │      no single pipeline owner can reconcile them
- │                                     │      └──────────────────────────┐
- │                                     │                                 v
- └── Conflicting expert domains? ──> [ 5. The Connected Boardroom ]  <───┘
+```mermaid
+flowchart TD
+    Q{"How complex is the task?"}
 
- Home / demotion check, run quarterly:
-   Every stage's set is fixed, no Part IV reliability problems recurring?  -> you're home, stay at 2
-   Blueprint 4 with tools/stages always called in the same order?         -> demote to 2
-   Blueprint 3 retrieving from a corpus that fits in one stage's prompt?  -> demote to 1 or 2
+    BP1(["1. The Smart Intern"])
+    BP2(["2. The Fixed Assembly Line"])
+    BP3(["3. The Intelligent Library"])
+    BP4(["4. The Autopilot Worker"])
+    BP5(["5. The Connected Boardroom"])
+
+    Q -->|"Simple / One-turn text?"| BP1
+    Q -->|"Rigid Step-by-Step flow?"| BP2
+    Q -->|"Needs private / fresh data?"| BP3
+    Q -->|"Dynamic / Unpredictable tools?"| BP4
+    Q -->|"Conflicting expert domains?"| BP5
+
+    NOTE1["you are here.<br/>Stay until a signal fires."]
+    BP2 -.- NOTE1
+
+    F1{"F1: needs facts no stage was ever given<br/>every stage individually correct, answer<br/>still wrong - nothing to ground it in"}
+    BP2 --> F1
+    F1 --> BP3
+
+    F2{"F2: a stage's output picks the next stage<br/>from a set you didn't fully enumerate<br/>set of stages no longer fixed at design time"}
+    BP3 --> F2
+    F2 --> BP4
+
+    BLAST["blast radius jumps here (Ch1 §7.2.5)"]
+    BP4 -.- BLAST
+
+    F3{"F3: stages answer to conflicting objectives<br/>no single pipeline owner can reconcile them"}
+    BP4 --> F3
+    F3 --> BP5
+
+    subgraph DEMOTE["Home / demotion check, run quarterly"]
+        HOME{"Every stage's set is fixed, no Part IV<br/>reliability problems recurring?"}
+        D1{"Blueprint 4 with tools/stages<br/>always called in the same order?"}
+        D2{"Blueprint 3 retrieving from a corpus<br/>that fits in one stage's prompt?"}
+    end
+
+    BP2 -.->|"yes"| HOME
+    HOME -.->|"you're home, stay at 2"| BP2
+    BP4 -.->|"yes"| D1
+    D1 -.->|"demote to 2"| BP2
+    BP3 -.->|"yes"| D2
+    D2 -.->|"demote to 1 or 2"| BP2
+
+    classDef blueprint fill:#e8f0fe,stroke:#4285f4,color:#1a1a1a
+    class BP1,BP2,BP3,BP4,BP5 blueprint
+    classDef signal fill:#fff4e0,stroke:#d9954a,color:#1a1a1a
+    class F1,F2,F3 signal
+    classDef demotion fill:#fce8e6,stroke:#ea4335,color:#1a1a1a
+    class HOME,D1,D2 demotion
+    classDef note fill:#f5f5f5,stroke:#9e9e9e,color:#1a1a1a
+    class NOTE1,BLAST note
 ```
 
 Complexity ratchets upward by default, because every increment has a local

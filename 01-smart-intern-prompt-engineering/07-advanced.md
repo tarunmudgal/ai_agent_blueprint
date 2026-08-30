@@ -304,8 +304,9 @@ This is the section most write-ups on meta-prompting leave out.
 
 Every prompt in this chapter has the same shape:
 
-```
-[ instructions you wrote ]  +  [ text you did not write ]
+```mermaid
+flowchart LR
+    A["instructions you wrote"] --> P["+"] --> B["text you did not write"]
 ```
 
 The second half is the problem. A stack trace contains a message string. That string
@@ -496,23 +497,25 @@ will eventually happen and design so that it does not matter.
 Stop asking "can this be injected?" The answer is always yes. Ask instead: **when it is
 injected, what can the attacker reach?**
 
-```
-BLAST RADIUS BY BLUEPRINT
+```mermaid
+flowchart TD
+    B1["1. Smart Intern<br/>no tools, no memory<br/>worst case: bad text reaches one reader"]
+    B2["2. Fixed Assembly Line<br/>+ poisons stage N+1<br/>worst case: corrupt text flows downstream"]
+    B3["3. Intelligent Library<br/>+ poisoned corpus<br/>worst case: injection persists in the index"]
+    B4["4. Autopilot Worker<br/>+ REAL ACTIONS<br/>worst case: attacker calls your tools"]
+    B5["5. Connected Boardroom<br/>+ delegated actions<br/>worst case: attacker drives a supervisor"]
+    B1 --> B2 --> B3 --> B4 --> B5
 
-1. Smart Intern         │██                                        │ text out
-   no tools, no memory  │ worst case: bad text reaches one reader   │
-                        │                                           │
-2. Fixed Assembly Line  │██████                                     │ + poisons stage N+1
-                        │ worst case: corrupt text flows downstream │
-                        │                                           │
-3. Intelligent Library  │████████                                   │ + poisoned corpus
-                        │ worst case: injection persists in the index│
-                        │                                           │
-4. Autopilot Worker     │████████████████████                       │ + REAL ACTIONS
-                        │ worst case: attacker calls your tools     │
-                        │                                           │
-5. Connected Boardroom  │██████████████████████████                 │ + delegated actions
-                        │ worst case: attacker drives a supervisor  │
+    classDef r1 fill:#e6f4ea,stroke:#34a853,color:#1a1a1a
+    classDef r2 fill:#fef7e0,stroke:#f9ab00,color:#1a1a1a
+    classDef r3 fill:#fde9d9,stroke:#e37400,color:#1a1a1a
+    classDef r4 fill:#fce8e6,stroke:#ea4335,color:#1a1a1a
+    classDef r5 fill:#f4c7c3,stroke:#a50e0e,color:#1a1a1a
+    class B1 r1
+    class B2 r2
+    class B3 r3
+    class B4 r4
+    class B5 r5
 ```
 
 This is a genuine, under-appreciated **security advantage of Blueprint 1**. A Smart Intern
@@ -555,15 +558,16 @@ inverted hard.
 A large context window is a *capacity* claim, not a *quality* claim. The model can hold the
 tokens. It does not attend to them uniformly.
 
-```
-RECALL vs POSITION   (the shape, not measured numbers — measure your own)
+RECALL vs POSITION (the shape, not measured numbers — measure your own):
 
- high │████                                                   ████
-      │████ ███                                          ███  ████
-      │████ ████ ███  ███   ███   ███   ███   ███  ████  ████ ████
-  low │████ ████ ████ ████  ████  ████  ████  ████ ████  ████ ████
-      └──────────────────────────────────────────────────────────
-        START  (primacy)      <-- the middle sags -->    END (recency)
+```mermaid
+flowchart LR
+    A(["START (primacy)<br/>recall: high"]) --> B["middle<br/>recall sags (low)"] --> C(["END (recency)<br/>recall: high"])
+
+    classDef high fill:#e6f4ea,stroke:#34a853,color:#1a1a1a
+    classDef low fill:#fce8e6,stroke:#ea4335,color:#1a1a1a
+    class A,C high
+    class B low
 ```
 
 Three failure modes worth recognising by name:
@@ -583,16 +587,27 @@ published needle-in-a-haystack chart.
 
 The single highest-leverage fix for long prompts, and it costs you forty tokens.
 
-```
-WEAK                  BETTER                BEST
-┌──────────────┐      ┌──────────────┐      ┌──────────────┐
-│ 30k document │      │ INSTRUCTION  │      │ INSTRUCTION  │
-│              │      ├──────────────┤      ├──────────────┤
-├──────────────┤      │ 30k document │      │ 30k document │
-│ instruction  │      └──────────────┘      ├──────────────┤
-└──────────────┘       primacy only         │ INSTRUCTION  │
- buried after                               │ RESTATED     │
- the document                               └──────────────┘
+```mermaid
+flowchart TD
+    subgraph WEAK["WEAK — buried after the document"]
+        direction TB
+        W1["30k document"] --> W2["instruction"]
+    end
+    subgraph BETTER["BETTER — primacy only"]
+        direction TB
+        Be1["INSTRUCTION"] --> Be2["30k document"]
+    end
+    subgraph BEST["BEST — instruction sandwich"]
+        direction TB
+        S1["INSTRUCTION"] --> S2["30k document"] --> S3["INSTRUCTION RESTATED"]
+    end
+
+    classDef weak fill:#fce8e6,stroke:#ea4335,color:#1a1a1a
+    classDef better fill:#fef7e0,stroke:#f9ab00,color:#1a1a1a
+    classDef best fill:#e6f4ea,stroke:#34a853,color:#1a1a1a
+    class W1,W2 weak
+    class Be1,Be2 better
+    class S1,S2,S3 best
 ```
 
 Putting the instruction before long content is standard advice (see Google's
@@ -725,16 +740,20 @@ Verified rates:
 
 The consequence, drawn to scale:
 
-```
-INPUT TOKEN COST — one minute of each
+INPUT TOKEN COST — one minute of each:
 
- audio  60s      │███                                    │  ~1,920
- image  1 small  │▏                                      │     258
- image  1600x1200│██                                     │  ~1,548  (3x2 tiles)
- text   3,000 wd │██████                                 │  ~4,000
- video  60s      │████████████████████████████████████   │ ~15,780
-                 └───────────────────────────────────────┘
-                  0                                  16,000 tokens
+```mermaid
+flowchart LR
+    A["Image, 1 small<br/>258 tokens"] --> B["Image, 1600x1200<br/>~1,548 tokens (3x2 tiles)"]
+    B --> C["Audio, 60s<br/>~1,920 tokens"] --> D["Text, 3,000 words<br/>~4,000 tokens"]
+    D --> E["Video, 60s<br/>~15,780 tokens"]
+
+    classDef cheap fill:#e6f4ea,stroke:#34a853,color:#1a1a1a
+    classDef mid fill:#fef7e0,stroke:#f9ab00,color:#1a1a1a
+    classDef expensive fill:#fce8e6,stroke:#ea4335,color:#1a1a1a
+    class A,B cheap
+    class C,D mid
+    class E expensive
 ```
 
 The tiling arithmetic, worked once so you can do it yourself:

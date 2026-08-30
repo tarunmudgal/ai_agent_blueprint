@@ -307,22 +307,22 @@ def run_risk_report_pipeline(
 
 The sequence, drawn once as a whole:
 
-```
-USER                PIPELINE                       MODEL (stage N)
- │                      │                                 │
- │  "run pipeline"      │                                 │
- │─────────────────────▶│                                 │
- │                      │  on_progress("Stage 1 of 4:      │
- │◀─── progress ────────│   translating...")               │
- │                      │──── interactions.create ────────▶│
- │                      │◀─── step.delta (text)*  ─────────│   *stream=True path only
- │                      │◀─── interaction.completed ───────│
- │                      │  on_progress("Stage 2 of 4:      │
- │◀─── progress ────────│   summarizing...")               │
- │                      │──── interactions.create ────────▶│
- │                      │◀────────────────────────────────│
- │                      │  ... stages 3, 4 ...              │
- │◀─── final bullets ───│                                 │
+```mermaid
+sequenceDiagram
+    participant User
+    participant Pipeline
+    participant Model as Model (stage N)
+
+    User->>Pipeline: "run pipeline"
+    Pipeline-->>User: progress: "Stage 1 of 4: translating..."
+    Pipeline->>Model: interactions.create
+    Model-->>Pipeline: step.delta (text)* (*stream=True path only)
+    Model-->>Pipeline: interaction.completed
+    Pipeline-->>User: progress: "Stage 2 of 4: summarizing..."
+    Pipeline->>Model: interactions.create
+    Model-->>Pipeline: interaction.completed
+    Note over Pipeline,Model: ... stages 3, 4 ...
+    Pipeline-->>User: final bullets
 ```
 
 **Best used for:** a synchronous request a human is actively watching — a chat UI, a

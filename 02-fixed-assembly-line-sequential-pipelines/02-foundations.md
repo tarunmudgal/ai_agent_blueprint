@@ -21,26 +21,22 @@ anymore.
 
 Same logic, software version:
 
-```
-FIXED ASSEMBLY LINE                         NOT AN ASSEMBLY LINE ANYMORE
-(order decided at design time)              (order decided at run time, by a model)
+```mermaid
+flowchart LR
+    subgraph FIXED["FIXED ASSEMBLY LINE (order decided at design time) = Blueprint 2"]
+        direction TD
+        F1["Stage 1"] --> F2["Stage 2<br/>always runs, always next"]
+        F2 --> F3["Stage 3<br/>always runs, always next"]
+        F3 --> F4["Stage 4<br/>always runs, always last"]
+    end
+    subgraph NOTFIXED["NOT AN ASSEMBLY LINE ANYMORE (order decided at run time, by a model) = Blueprint 4 (The Autopilot Worker)"]
+        direction TD
+        N1["Stage 1"] --> N2{"Model reads Stage 1's OUTPUT<br/>and picks what runs next"}
+        N2 --> N3["Stage 2A? Stage 2B?<br/>Skip to Stage 4?<br/>(decided by the model,<br/>not by you, not in advance)"]
+    end
 
-┌───────┐                                   ┌───────┐
-│Stage 1│                                   │Stage 1│
-└───┬───┘                                   └───┬───┘
-    ▼                                           ▼
-┌───────┐                                   ┌─────────────────────┐
-│Stage 2│  always runs, always next          │ Model reads Stage 1's│
-└───┬───┘                                   │ OUTPUT and picks     │
-    ▼                                           │ what runs next     │
-┌───────┐                                   └──────────┬───────────┘
-│Stage 3│  always runs, always next                     ▼
-└───┬───┘                                       Stage 2A? Stage 2B?
-    ▼                                           Skip to Stage 4?
-┌───────┐                                       (decided by the model,
-│Stage 4│  always runs, always last              not by you, not in advance)
-└───────┘
-= Blueprint 2                                  = Blueprint 4 (The Autopilot Worker)
+    classDef errorPath fill:#ffe0e0,stroke:#d94a4a,color:#1a1a1a
+    class N2,N3 errorPath
 ```
 
 **The core architectural constraint: order is fixed at design time, not decided at run
@@ -209,41 +205,18 @@ isolate, a need to reuse the intermediate value, a stage that needs its own retr
 Every stage, model call or not, has the same four parts. Applied concretely to Stage 1
 (translate) of the Risk Report Pipeline:
 
-```
-┌──────────────────────────────────────────────────────────────────────┐
-│                         STAGE 1 — TRANSLATE                          │
-│                                                                        │
-│  INPUT CONTRACT                                                       │
-│  ┌──────────────────────────────────────────────┐                    │
-│  │ document_text: str                            │                    │
-│  │ non-empty, English source prose                │                    │
-│  └──────────────────────────────────────────────┘                    │
-│                          │                                             │
-│                          ▼                                             │
-│  PROMPT                                                               │
-│  ┌──────────────────────────────────────────────┐                    │
-│  │ system_instruction: "Translate the input to    │                    │
-│  │ Spanish. Return only the translation — no      │                    │
-│  │ preamble, no framing, no commentary."          │                    │
-│  │ input: document_text                            │                    │
-│  └──────────────────────────────────────────────┘                    │
-│                          │                                             │
-│                          ▼                                             │
-│  OUTPUT CONTRACT                                                      │
-│  ┌──────────────────────────────────────────────┐                    │
-│  │ str: Spanish-language prose ONLY, no English   │                    │
-│  │ chat framing, non-empty                        │                    │
-│  └──────────────────────────────────────────────┘                    │
-│                          │                                             │
-│                          ▼                                             │
-│  VALIDATION GATE                                                      │
-│  ┌──────────────────────────────────────────────┐                    │
-│  │ looks_like_pure_translation(text) -> bool      │                    │
-│  │ (§1.3) — reject chat-assistant preamble         │                    │
-│  │ before this value crosses the seam into        │                    │
-│  │ Stage 2                                         │                    │
-│  └──────────────────────────────────────────────┘                    │
-└──────────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph ST1["STAGE 1 — TRANSLATE"]
+        IC["INPUT CONTRACT<br/>document_text: str<br/>non-empty, English source prose"]
+        PR["PROMPT<br/>system_instruction: 'Translate the input to<br/>Spanish. Return only the translation — no<br/>preamble, no framing, no commentary.'<br/>input: document_text"]
+        OC["OUTPUT CONTRACT<br/>str: Spanish-language prose ONLY,<br/>no English chat framing, non-empty"]
+        VG[["VALIDATION GATE<br/>looks_like_pure_translation(text) -> bool<br/>(§1.3) — reject chat-assistant preamble<br/>before this value crosses the seam into Stage 2"]]
+        IC --> PR --> OC --> VG
+    end
+
+    classDef modelCall fill:#e0f0ff,stroke:#4a90d9,color:#1a1a1a
+    class PR modelCall
 ```
 
 The prompt is the smallest part of this diagram, deliberately. Chapter 1 spent its whole

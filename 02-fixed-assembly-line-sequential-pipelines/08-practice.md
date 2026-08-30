@@ -382,40 +382,61 @@ The article's tree told you where to start. Chapter 1's own §8.4 grafted diagno
 onto it from Blueprint 1. This is the same tree, the position marker moved one level
 down, with this chapter's diagnostics grafted from Blueprint 2:
 
-```
- [ How complex is the task? ]
- │
- ├── Simple / One-turn text? ──────> [ 1. The Smart Intern ]
- │
- ├── Rigid Step-by-Step flow? ─────> [ 2. The Fixed Assembly Line ]
- │                                     │
- │                                     │  ... you are here. Stay until a signal fires.
- │                                     │
- │                                     ├─ F1: needs facts no stage was ever given
- │                                     │      every stage individually correct, answer
- │                                     │      still wrong - nothing to ground it in
- │                                     │      └──────────────────────────┐
- │                                     │                                 v
- ├── Needs private / fresh data? ──> [ 3. The Intelligent Library ]  <───┘
- │                                     │
- │                                     ├─ F2: a stage's output picks the next stage
- │                                     │      from a set you didn't fully enumerate
- │                                     │      set of stages no longer fixed at design time
- │                                     │      └──────────────────────────┐
- │                                     │                                 v
- ├── Dynamic / Unpredictable tools? > [ 4. The Autopilot Worker ]    <───┘
- │                                     │      ^ blast radius jumps here (Ch1 §7.2.5)
- │                                     │
- │                                     ├─ F3: stages answer to conflicting objectives
- │                                     │      no single pipeline owner can reconcile them
- │                                     │      └──────────────────────────┐
- │                                     │                                 v
- └── Conflicting expert domains? ──> [ 5. The Connected Boardroom ]  <───┘
+```mermaid
+flowchart TD
+    Q{"How complex is the task?"}
 
- Home / demotion check, run quarterly:
-   Every stage's set is fixed, no Part IV reliability problems recurring?  -> you're home, stay at 2
-   Blueprint 4 with tools/stages always called in the same order?         -> demote to 2
-   Blueprint 3 retrieving from a corpus that fits in one stage's prompt?  -> demote to 1 or 2
+    BP1(["1. The Smart Intern"])
+    BP2(["2. The Fixed Assembly Line"])
+    BP3(["3. The Intelligent Library"])
+    BP4(["4. The Autopilot Worker"])
+    BP5(["5. The Connected Boardroom"])
+
+    Q -->|"Simple / One-turn text?"| BP1
+    Q -->|"Rigid Step-by-Step flow?"| BP2
+    Q -->|"Needs private / fresh data?"| BP3
+    Q -->|"Dynamic / Unpredictable tools?"| BP4
+    Q -->|"Conflicting expert domains?"| BP5
+
+    NOTE1["you are here.<br/>Stay until a signal fires."]
+    BP2 -.- NOTE1
+
+    F1{"F1: needs facts no stage was ever given<br/>every stage individually correct, answer<br/>still wrong - nothing to ground it in"}
+    BP2 --> F1
+    F1 --> BP3
+
+    F2{"F2: a stage's output picks the next stage<br/>from a set you didn't fully enumerate<br/>set of stages no longer fixed at design time"}
+    BP3 --> F2
+    F2 --> BP4
+
+    BLAST["blast radius jumps here (Ch1 §7.2.5)"]
+    BP4 -.- BLAST
+
+    F3{"F3: stages answer to conflicting objectives<br/>no single pipeline owner can reconcile them"}
+    BP4 --> F3
+    F3 --> BP5
+
+    subgraph DEMOTE["Home / demotion check, run quarterly"]
+        HOME{"Every stage's set is fixed, no Part IV<br/>reliability problems recurring?"}
+        D1{"Blueprint 4 with tools/stages<br/>always called in the same order?"}
+        D2{"Blueprint 3 retrieving from a corpus<br/>that fits in one stage's prompt?"}
+    end
+
+    BP2 -.->|"yes"| HOME
+    HOME -.->|"you're home, stay at 2"| BP2
+    BP4 -.->|"yes"| D1
+    D1 -.->|"demote to 2"| BP2
+    BP3 -.->|"yes"| D2
+    D2 -.->|"demote to 1 or 2"| BP2
+
+    classDef blueprint fill:#e8f0fe,stroke:#4285f4,color:#1a1a1a
+    class BP1,BP2,BP3,BP4,BP5 blueprint
+    classDef signal fill:#fff4e0,stroke:#d9954a,color:#1a1a1a
+    class F1,F2,F3 signal
+    classDef demotion fill:#fce8e6,stroke:#ea4335,color:#1a1a1a
+    class HOME,D1,D2 demotion
+    classDef note fill:#f5f5f5,stroke:#9e9e9e,color:#1a1a1a
+    class NOTE1,BLAST note
 ```
 
 Complexity ratchets upward by default, because every increment has a local

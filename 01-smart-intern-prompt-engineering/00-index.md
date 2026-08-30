@@ -54,20 +54,20 @@ the end you will have a strong intuition for which changes actually moved the ne
 
 You do not have to read it in order. Three routes:
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│  New to all of this?                                            │
-│  → Part 0 → Part I → Part II → Part III → stop.                 │
-│    That is the working core. Come back for the rest later.      │
-├─────────────────────────────────────────────────────────────────┤
-│  Comfortable with LLMs, want the craft?                         │
-│  → Part III → Part IV → Part VIII.                              │
-│    Skim Part I's glossary card to align on vocabulary.          │
-├─────────────────────────────────────────────────────────────────┤
-│  Shipping something to production?                              │
-│  → Part V → Part VI → Part VII.                                 │
-│    This is the material that separates a demo from a service.   │
-└─────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    Start(["Which route are you?"]) --> A["New to all of this?"]
+    Start --> B["Comfortable with LLMs,<br/>want the craft?"]
+    Start --> C["Shipping something<br/>to production?"]
+
+    A --> A1["Part 0 → Part I → Part II → Part III → stop.<br/>That is the working core.<br/>Come back for the rest later."]
+    B --> B1["Part III → Part IV → Part VIII.<br/>Skim Part I's glossary card<br/>to align on vocabulary."]
+    C --> C1["Part V → Part VI → Part VII.<br/>This is the material that separates<br/>a demo from a service."]
+
+    classDef routeNode fill:#e8f0fe,stroke:#4285f4,color:#1a1a1a
+    classDef destNode fill:#e6f4ea,stroke:#34a853,color:#1a1a1a
+    class A,B,C routeNode
+    class A1,B1,C1 destNode
 ```
 
 ---

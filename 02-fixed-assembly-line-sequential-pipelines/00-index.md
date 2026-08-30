@@ -45,8 +45,9 @@ Directly from the article's own example: *"taking a technical text, translating 
 summarizing it, and finally formatting its risks into a bulleted list."* Four stages,
 one document — the same post-incident review memo from Chapter 1.
 
-```
-technical text  →  translate  →  summarize  →  extract risks  →  bulleted list
+```mermaid
+flowchart LR
+    A(["technical text"]) --> B["translate"] --> C["summarize"] --> D["extract risks"] --> E(["bulleted list"])
 ```
 
 ### Pipeline B — The Incident Response Pipeline
@@ -54,8 +55,12 @@ technical text  →  translate  →  summarize  →  extract risks  →  bullete
 This is where Chapter 1 stops being background reading and starts being load-bearing.
 Every stage below is a prompt you already have — unmodified, chained.
 
-```
-support ticket  →  classify (Ch1)  →  route (plain code, no model)  →  rewrite (Ch1)  →  log summary (Ch1)
+```mermaid
+flowchart LR
+    A(["support ticket"]) --> B["classify<br/>(Ch1)"] --> C["route<br/>(plain code, no model)"] --> D["rewrite<br/>(Ch1)"] --> E(["log summary<br/>(Ch1)"])
+
+    classDef noModelCall fill:#fff4e0,stroke:#d9954a,color:#1a1a1a
+    class C noModelCall
 ```
 
 Three of these four stages are Chapter 1's exact prompts. The second stage is not a
@@ -72,22 +77,14 @@ across blueprints is not a nice-to-have, it's the normal way this actually gets 
 
 ## How to read this
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│  New to this blueprint?                                         │
-│  → Part I → Part II → Part III → stop.                          │
-│    That's the working core: vocabulary, what a pipeline is,     │
-│    and how to build one with a real contract at every seam.     │
-├─────────────────────────────────────────────────────────────────┤
-│  Already comfortable, want the craft?                           │
-│  → Part III → Part IV → Part VIII.                               │
-│    Skim Part I's glossary card to align on vocabulary first.    │
-├─────────────────────────────────────────────────────────────────┤
-│  Shipping something to production?                               │
-│  → Part V → Part VI → Part VII.                                  │
-│    Packaging a pipeline, its cost/latency math, and the honest   │
-│    line between "fixed" and "you built an agent by accident."    │
-└─────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    Q1{"New to this blueprint?"} --> P1["Part I -> Part II -> Part III -> stop<br/>The working core: vocabulary, what a<br/>pipeline is, and how to build one with a<br/>real contract at every seam"]
+    Q2{"Already comfortable,<br/>want the craft?"} --> P2["Part III -> Part IV -> Part VIII<br/>Skim Part I's glossary card to align<br/>on vocabulary first"]
+    Q3{"Shipping something<br/>to production?"} --> P3["Part V -> Part VI -> Part VII<br/>Packaging a pipeline, its cost/latency<br/>math, and the honest line between<br/>'fixed' and 'you built an agent by accident'"]
+
+    classDef terminal fill:#e8f5e9,stroke:#4caf50,color:#1a1a1a
+    class P1,P2,P3 terminal
 ```
 
 ---

@@ -81,12 +81,20 @@ Take one line from our trace:
 
 A rough sense of how that fragments:
 
+```mermaid
+flowchart LR
+    T1["raise"] --> T2["Gate"] --> T3["way"] --> T4["Timeout"] --> T5["("] --> T6["f"] --> T7["&quot;"] --> T8["no"] --> T9["response"] --> T10["in"] --> T11["{"] --> T12["..."]
+
+    classDef common fill:#e6f4ea,stroke:#34a853,color:#1a1a1a
+    classDef identifier fill:#fce8e6,stroke:#ea4335,color:#1a1a1a
+    classDef punctuation fill:#fef7e0,stroke:#f9ab00,color:#1a1a1a
+    class T1,T8,T9,T10 common
+    class T2,T3,T4 identifier
+    class T5,T6,T7,T11,T12 punctuation
 ```
-┌───────┬───────┬─────────┬─────────┬───┬───┬────┬─────┬──────────┬────┬───┬───┐
-│ raise │ Gate  │ way     │ Timeout │ ( │ f │ "  │ no  │ response │ in │ { │...│
-└───────┴───────┴─────────┴─────────┴───┴───┴────┴─────┴──────────┴────┴───┴───┘
-  common  ← one rare identifier, three tokens →   each punctuation mark counts
-```
+
+*Green = common words, cheap. Red = one rare identifier (`GatewayTimeout`) split into
+three tokens. Yellow = punctuation, each mark counts.*
 
 Three things fall out of this, and they explain a lot of otherwise-baffling behaviour:
 
@@ -109,17 +117,24 @@ system instruction, your input, its thinking, and its output, all sharing one bu
 
 Think of it as a desk. Everything for the task has to fit on the desk at the same time.
 
-```
-CONTEXT WINDOW  (one shared budget)
-┌────────────────────────────────────────────────────────────────────────┐
-│ ██ system instruction (~53 tok)                                        │
-│ ████ user prompt wrapper (~25 tok)                                     │
-│ ██████ the stack trace (~81 tok)                                       │
-│ ░░░░░░░░░░░ model's internal thinking (varies — you do not see it)     │
-│ ▓▓▓▓▓▓▓▓▓▓▓▓▓▓ the response it writes back                             │
-│                                                                        │
-│ ..................... enormous amount of room left .................... │
-└────────────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph CW["CONTEXT WINDOW (one shared budget)"]
+        SI["system instruction<br/>~53 tokens"]
+        UW["user prompt wrapper<br/>~25 tokens"]
+        ST["the stack trace<br/>~81 tokens"]
+        TH["model's internal thinking<br/><i>varies — you do not see it</i>"]
+        RESP["the response it writes back<br/><i>varies</i>"]
+        ROOM["enormous amount of room left"]
+        SI --> UW --> ST --> TH --> RESP --> ROOM
+    end
+
+    classDef given fill:#e0f0ff,stroke:#4a90d9,color:#1a1a1a
+    classDef unseen fill:#fff4e0,stroke:#d9954a,color:#1a1a1a
+    classDef room fill:#f1f3f4,stroke:#9aa0a6,color:#1a1a1a,stroke-dasharray: 5 5
+    class SI,UW,ST given
+    class TH,RESP unseen
+    class ROOM room
 ```
 
 Our entire request is around **160 tokens** before the model says anything. On a modern
@@ -259,21 +274,25 @@ is separate.
 At each step the model produces a probability distribution over possible next tokens. These
 three knobs decide how to pick from it.
 
-```
-Next token after "The gateway timed out because the payment"
+```mermaid
+flowchart LR
+    TOK["Next token after:<br/>&quot;The gateway timed out<br/>because the payment&quot;"] --> P1["provider — 38%"]
+    TOK --> P2["service — 22%"]
+    TOK --> P3["processor — 15%"]
+    TOK --> P4["gateway — 10%"]
+    TOK --> P5["system — 7%"]
+    TOK --> P6["vendor — 4%"]
+    TOK --> P7["...tail... — 4%"]
 
-  provider     ████████████████████████  38%
-  service      ██████████████            22%
-  processor    █████████                 15%
-  gateway      ██████                    10%
-  system       ████                       7%
-  vendor       ██                         4%
-  ...tail...   █                          4%
-
-  temperature ──> flattens or sharpens this whole curve
-  top-k = 3   ──> only ever consider the first three bars
-  top-p = 0.75──> consider bars until they sum to 75%, then stop
+    classDef topk fill:#e0f0ff,stroke:#4a90d9,color:#1a1a1a
+    classDef rest fill:#f1f3f4,stroke:#9aa0a6,color:#1a1a1a
+    class P1,P2,P3 topk
+    class P4,P5,P6,P7 rest
 ```
+
+- **temperature** → flattens or sharpens this whole curve
+- **top-k = 3** → only ever consider the first three bars (highlighted above)
+- **top-p = 0.75** → consider bars until they sum to 75%, then stop
 
 | Knob | What it does | Range |
 |---|---|---|
@@ -316,14 +335,24 @@ not from turning temperature down.
 Gemini 3 and 2.5 series models **reason internally before answering**. That reasoning is
 made of tokens. Those tokens are billed. You mostly do not see them.
 
-```
-        YOU SEE                              YOU PAY FOR
-┌──────────────────────┐            ┌──────────────────────────┐
-│ input tokens         │            │ input tokens             │
-│ output tokens        │            │ output tokens            │
-│ thought SUMMARIES    │  ← only a  │ ALL thinking tokens      │  ← the full
-│   (if you ask)       │    digest  │   (the complete reasoning)│    reasoning
-└──────────────────────┘            └──────────────────────────┘
+```mermaid
+flowchart LR
+    subgraph SEE["YOU SEE"]
+        S1["input tokens"]
+        S2["output tokens"]
+        S3["thought SUMMARIES<br/>(if you ask)<br/><i>only a digest</i>"]
+    end
+    subgraph PAY["YOU PAY FOR"]
+        P1["input tokens"]
+        P2["output tokens"]
+        P3["ALL thinking tokens<br/>(the complete reasoning)<br/><i>the full reasoning</i>"]
+    end
+    S3 -.->|billed in full, only digest shown| P3
+
+    classDef seeStyle fill:#e8f0fe,stroke:#4285f4,color:#1a1a1a
+    classDef payStyle fill:#fce8e6,stroke:#ea4335,color:#1a1a1a
+    class S1,S2,S3 seeStyle
+    class P1,P2,P3 payStyle
 ```
 
 Google is explicit: pricing is based on the full thought tokens generated, even though only
@@ -390,15 +419,27 @@ Two different numbers, and confusing them leads to the wrong optimisation.
 - **Total latency** — request sent to last token received.
 - **TTFT (time to first token)** — request sent to *first* token received.
 
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant S as Server
+    Note over U,S: NON-STREAMING
+    U->>S: send request
+    Note over U: user stares at a spinner
+    S-->>U: done (all tokens at once)
 ```
-NON-STREAMING
-send │████████████████████████████████████│ done
-     └─────────── user stares at a spinner ─────────┘
 
-STREAMING
-send │███│ first token... text... text... text │ done
-     └TTFT┘
-          └──── user is already reading ────┘
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant S as Server
+    Note over U,S: STREAMING
+    U->>S: send request
+    S-->>U: first token (TTFT)
+    Note over U: user is already reading
+    S-->>U: text...
+    S-->>U: text...
+    S-->>U: done
 ```
 
 Same total time. Completely different experience.

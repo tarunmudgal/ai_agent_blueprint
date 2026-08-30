@@ -824,46 +824,65 @@ is not:
 The article's tree told you where to start. This one adds the diagnostics that tell you
 when to leave.
 
-```
- [ How complex is the task? ]
- │
- ├── Simple / One-turn text? ──────> [ 1. The Smart Intern ]
- │                                     │
- │                                     │  ... you are here. Stay until a signal fires.
- │                                     │
- │                                     ├─ S1: quality collapses on multi-part tasks
- │                                     │      output good on 3 of 4 parts, varying
- │                                     │      no visibility into intermediates
- │                                     │      └──────────────────────────┐
- │                                     │                                 v
- ├── Rigid Step-by-Step flow? ─────> [ 2. The Fixed Assembly Line ]  <───┘
- │                                     │
- │                                     ├─ S2: needs facts you did not paste in
- │                                     │      confident, wrong, about your own data
- │                                     │      corpus larger than the prompt
- │                                     │      └──────────────────────────┐
- │                                     │                                 v
- ├── Needs private / fresh data? ──> [ 3. The Intelligent Library ]  <───┘
- │                                     │
- │                                     ├─ S3: next step depends on the output
- │                                     │      you are writing an if/re-prompt loop
- │                                     │      call count unknown in advance
- │                                     │      └──────────────────────────┐
- │                                     │                                 v
- ├── Dynamic / Unpredictable tools? > [ 4. The Autopilot Worker ]    <───┘
- │                                     │      ^ blast radius jumps here (§7.2.5)
- │                                     │
- │                                     ├─ S4: one prompt, conflicting objectives
- │                                     │      every edit for A regresses B
- │                                     │      genuinely different expert domains
- │                                     │      └──────────────────────────┐
- │                                     │                                 v
- └── Conflicting expert domains? ──> [ 5. The Connected Boardroom ]  <───┘
+```mermaid
+flowchart TD
+    Q{"How complex is the task?"}
 
- Demotion check, run quarterly:
-   Blueprint 4 with tools that are always called in the same order?  -> demote to 2
-   Blueprint 3 retrieving from a corpus that fits in the prompt?     -> demote to 1
-   Blueprint 5 whose specialists never disagree?                     -> demote to 2
+    BP1(["1. The Smart Intern"])
+    BP2(["2. The Fixed Assembly Line"])
+    BP3(["3. The Intelligent Library"])
+    BP4(["4. The Autopilot Worker"])
+    BP5(["5. The Connected Boardroom"])
+
+    Q -->|"Simple / One-turn text?"| BP1
+    Q -->|"Rigid Step-by-Step flow?"| BP2
+    Q -->|"Needs private / fresh data?"| BP3
+    Q -->|"Dynamic / Unpredictable tools?"| BP4
+    Q -->|"Conflicting expert domains?"| BP5
+
+    NOTE1["you are here.<br/>Stay until a signal fires."]
+    BP1 -.- NOTE1
+
+    S1{"S1: quality collapses on multi-part tasks<br/>output good on 3 of 4 parts, varying<br/>no visibility into intermediates"}
+    BP1 --> S1
+    S1 --> BP2
+
+    S2{"S2: needs facts you did not paste in<br/>confident, wrong, about your own data<br/>corpus larger than the prompt"}
+    BP2 --> S2
+    S2 --> BP3
+
+    S3{"S3: next step depends on the output<br/>you are writing an if/re-prompt loop<br/>call count unknown in advance"}
+    BP3 --> S3
+    S3 --> BP4
+
+    BLAST["blast radius jumps here (§7.2.5)"]
+    BP4 -.- BLAST
+
+    S4{"S4: one prompt, conflicting objectives<br/>every edit for A regresses B<br/>genuinely different expert domains"}
+    BP4 --> S4
+    S4 --> BP5
+
+    subgraph DEMOTE["Demotion check, run quarterly"]
+        D1{"Blueprint 4 with tools that are<br/>always called in the same order?"}
+        D2{"Blueprint 3 retrieving from a corpus<br/>that fits in the prompt?"}
+        D3{"Blueprint 5 whose specialists<br/>never disagree?"}
+    end
+
+    BP4 -.->|"yes"| D1
+    D1 -.->|"demote to 2"| BP2
+    BP3 -.->|"yes"| D2
+    D2 -.->|"demote to 1"| BP1
+    BP5 -.->|"yes"| D3
+    D3 -.->|"demote to 2"| BP2
+
+    classDef blueprint fill:#e8f0fe,stroke:#4285f4,color:#1a1a1a
+    class BP1,BP2,BP3,BP4,BP5 blueprint
+    classDef signal fill:#fff4e0,stroke:#d9954a,color:#1a1a1a
+    class S1,S2,S3,S4 signal
+    classDef demotion fill:#fce8e6,stroke:#ea4335,color:#1a1a1a
+    class D1,D2,D3 demotion
+    classDef note fill:#f5f5f5,stroke:#9e9e9e,color:#1a1a1a
+    class NOTE1,BLAST note
 ```
 
 That last block is the half of the Golden Rule nobody applies. Complexity ratchets upward

@@ -213,13 +213,22 @@ for level in ("minimal", "low", "medium", "high"):
 
 Each shape has exactly one thing worth optimising. Optimising the others is wasted effort.
 
-```
-     INPUT                          OUTPUT
-     ─────                          ──────
- 1.  ████████████████████████  ->   █           SUMMARIZER   long in, short out
- 2.  ██                        ->   ▏           CLASSIFIER   short in, tiny out
- 3.  ██                        ->   ████████    GENERATOR    short in, long out
- 4.  ████        + heavy internal thinking      REASONER     thinking-dominated
+Illustrating the four task shapes as input/output proportions:
+
+```mermaid
+flowchart LR
+    subgraph S1["1. SUMMARIZER — long in, short out"]
+        I1["INPUT<br/>(long)"] --> O1["OUTPUT<br/>(short)"]
+    end
+    subgraph S2["2. CLASSIFIER — short in, tiny out"]
+        I2["INPUT<br/>(short)"] --> O2["OUTPUT<br/>(tiny)"]
+    end
+    subgraph S3["3. GENERATOR — short in, long out"]
+        I3["INPUT<br/>(short)"] --> O3["OUTPUT<br/>(long)"]
+    end
+    subgraph S4["4. REASONER — thinking-dominated"]
+        I4["INPUT<br/>(short)"] --> T4["heavy internal<br/>thinking"] --> O4["OUTPUT"]
+    end
 ```
 
 | Shape | Our task | Dominant cost | Optimise | Do **not** bother |
@@ -302,22 +311,21 @@ entirely about TTFT. A nightly batch job cares only about total, and about throu
 
 ### Where the milliseconds go
 
-```
-LATENCY WATERFALL — one interaction, non-streaming
+Where the milliseconds go, one interaction, non-streaming:
 
-  ├─ your code: render template, redact         ~1 ms      ▏
-  ├─ TLS + network to the API                 20-80 ms     █
-  ├─ queueing / admission                     varies       █▒
-  ├─ INPUT PROCESSING (prefill)                            ████
-  │    scales with input tokens; cache hits cut it
-  ├─ THINKING                                              ████████████████
-  │    scales with thinking_level. THE BIG ONE.
-  ├─ OUTPUT GENERATION (decode)                            ██████████
-  │    scales with output tokens, one token at a time
-  └─ network back                             20-80 ms     █
-                                                           │        │
-                                                    TTFT ──┘        │
-                                                    TOTAL ──────────┘
+```mermaid
+flowchart TD
+    A["your code: render template, redact<br/>~1 ms"] --> B["TLS + network to the API<br/>20-80 ms"]
+    B --> C["queueing / admission<br/>varies"]
+    C --> D["INPUT PROCESSING (prefill)<br/>scales with input tokens;<br/>cache hits cut it"]
+    D --> E["THINKING<br/>scales with thinking_level.<br/>THE BIG ONE."]
+    E --> TTFT(["TTFT<br/>first token received"])
+    TTFT --> F["OUTPUT GENERATION (decode)<br/>scales with output tokens,<br/>one token at a time"]
+    F --> G["network back<br/>20-80 ms"]
+    G --> TOTAL(["TOTAL<br/>last token received"])
+
+    classDef milestone fill:#fef7e0,stroke:#f9ab00,color:#1a1a1a
+    class TTFT,TOTAL milestone
 ```
 
 Note where TTFT lands: **after thinking.** Thinking happens before the first output token
@@ -385,15 +393,16 @@ classification and error rewriting it usually will, the latency case for Pro doe
 
 Some work should not sit on a request thread at all.
 
-```
-Is a human waiting for this specific response right now?
-   │
-  YES ── Is the output more than a couple of sentences?
-   │        YES -> stream=True, thinking_level as low as evals allow
-   │        NO  -> plain synchronous call; streaming buys nothing
-   │
-   NO ─── Queue it. background=True, or your own worker queue.
-          Optimise total tokens and throughput; ignore TTFT entirely.
+```mermaid
+flowchart TD
+    Q{"Is a human waiting for<br/>this specific response right now?"}
+    Q -->|YES| Q2{"Is the output more<br/>than a couple of sentences?"}
+    Q2 -->|YES| A["stream=True,<br/>thinking_level as low as evals allow"]
+    Q2 -->|NO| B["plain synchronous call;<br/>streaming buys nothing"]
+    Q -->|NO| C["Queue it.<br/>background=True, or your own worker queue.<br/>Optimise total tokens and throughput;<br/>ignore TTFT entirely."]
+
+    classDef terminal fill:#e8f5e9,stroke:#4caf50,color:#1a1a1a
+    class A,B,C terminal
 ```
 
 The Interactions API supports `background=True` for long-running work. One verified

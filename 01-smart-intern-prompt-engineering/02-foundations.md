@@ -57,20 +57,18 @@ no internet, and no right of reply — and who is contractually forbidden from s
 
 Strip the metaphor and four properties define the blueprint:
 
-```
-                  THE SMART INTERN CONTRACT
+```mermaid
+flowchart TD
+    subgraph CONTRACT["THE SMART INTERN CONTRACT"]
+        A["NO RETRY<br/>one response; nothing re-runs it"]
+        B["NO TOOL<br/>no search, no code, no API call"]
+        C["NO MEMORY<br/>no state carried between calls"]
+        D["NO SECOND OPINION<br/>no critic, no reviewer, no vote"]
+    end
+    CONTRACT --> E(["Consequence:<br/>THE PROMPT IS THE ENTIRE SYSTEM"])
 
-   ┌──────────────────────────────────────────────────────┐
-   │                                                      │
-   │   NO RETRY        one response; nothing re-runs it   │
-   │   NO TOOL         no search, no code, no API call    │
-   │   NO MEMORY       no state carried between calls     │
-   │   NO SECOND       no critic, no reviewer, no vote    │
-   │      OPINION                                         │
-   │                                                      │
-   └──────────────────────────────────────────────────────┘
-
-   Consequence:  THE PROMPT IS THE ENTIRE SYSTEM.
+    classDef terminal fill:#e8f5e9,stroke:#4caf50,color:#1a1a1a
+    class E terminal
 ```
 
 This is why prompt engineering is a real engineering discipline here and only a
@@ -253,26 +251,20 @@ And the consequence, documented across models and now common enough to have a na
 - **Lost in the middle** — material placed in the middle of a long prompt is recalled and
   followed measurably less reliably than the same material at either end.
 
-```
-INSTRUCTION FOLLOWING vs POSITION IN PROMPT
-(illustrative shape — the curve is real, the exact numbers depend on model and task)
+*(illustrative shape — the curve is real, the exact numbers depend on model and task.
+Instruction-following reliability is high near the start and end of the prompt, and dips
+in the middle.)*
 
- reliably
- followed  ┤██                                                     ███
-           ┤███                                                   ████
-           ┤ ███                                                 ████
-           ┤  ████                                             ████
-           ┤    █████                                       █████
-           ┤       ████████                           █████████
- sometimes ┤             ███████████████████████████████
- missed    ┤
-           └────────────┬───────────────┬──────────────┬──────────┬──►
-                      START           25%             75%        END
-                        │                                          │
-                  PRIMACY zone      "LOST IN THE MIDDLE"      RECENCY zone
-                        │                                          │
-              put the ROLE and                       put the OUTPUT FORMAT
-              the CORE TASK here                     and FINAL CONSTRAINTS here
+```mermaid
+flowchart LR
+    A["START<br/>PRIMACY zone<br/><i>put the ROLE and<br/>the CORE TASK here</i>"] --> B["25%–75%<br/>&quot;LOST IN THE MIDDLE&quot;<br/><i>reliability dips here</i>"] --> C["END<br/>RECENCY zone<br/><i>put the OUTPUT FORMAT<br/>and FINAL CONSTRAINTS here</i>"]
+
+    classDef primacy fill:#e0f0ff,stroke:#4a90d9,color:#1a1a1a
+    classDef lost fill:#ffe0e0,stroke:#d94a4a,color:#1a1a1a
+    classDef recency fill:#e0f0ff,stroke:#4a90d9,color:#1a1a1a
+    class A primacy
+    class B lost
+    class C recency
 ```
 
 Two honest caveats about that diagram:
@@ -292,26 +284,31 @@ Two honest caveats about that diagram:
 
 This is the most common concrete question, and it has a defensible answer.
 
-```
-        LAYOUT A                      LAYOUT B                 LAYOUT C
-   instructions first             data first              instructions BOTH ends
+```mermaid
+flowchart LR
+    subgraph A["LAYOUT A — instructions first"]
+        direction TB
+        A1["ROLE + TASK"] --> A2["THE DOCUMENT<br/>(40k tokens)"]
+    end
+    subgraph B["LAYOUT B — data first"]
+        direction TB
+        B1["THE DOCUMENT<br/>(40k tokens)"] --> B2["ROLE + TASK"]
+    end
+    subgraph C["LAYOUT C — instructions BOTH ends"]
+        direction TB
+        C1["ROLE + TASK"] --> C2["THE DOCUMENT<br/>(40k tokens)"] --> C3["RESTATE: task +<br/>output format"]
+    end
 
-  ┌────────────────────┐      ┌────────────────────┐    ┌────────────────────┐
-  │ ROLE + TASK        │      │                    │    │ ROLE + TASK        │
-  ├────────────────────┤      │   THE DOCUMENT     │    ├────────────────────┤
-  │                    │      │   (40k tokens)     │    │                    │
-  │   THE DOCUMENT     │      │                    │    │   THE DOCUMENT     │
-  │   (40k tokens)     │      │                    │    │   (40k tokens)     │
-  │                    │      ├────────────────────┤    │                    │
-  │                    │      │ ROLE + TASK        │    ├────────────────────┤
-  └────────────────────┘      └────────────────────┘    │ RESTATE: task +    │
-                                                        │ output format      │
-   Task sits in primacy.        Task sits in recency.   └────────────────────┘
-   Risk: forgotten by the       Risk: the model read
-   time it reaches the end.     40k tokens with no       Both zones used.
-                                idea what it was for.    Costs a few dozen
-                                                         extra tokens.
+    classDef recommended fill:#e8f5e9,stroke:#4caf50,color:#1a1a1a
+    classDef risky fill:#fff4e0,stroke:#d9954a,color:#1a1a1a
+    class C recommended
+    class B risky
 ```
+
+- **Layout A** — Task sits in primacy. Risk: forgotten by the time it reaches the end.
+- **Layout B** — Task sits in recency. Risk: the model read 40k tokens with no idea what
+  it was for.
+- **Layout C** — Both zones used. Costs a few dozen extra tokens. *(recommended for long inputs)*
 
 **What to actually do:**
 

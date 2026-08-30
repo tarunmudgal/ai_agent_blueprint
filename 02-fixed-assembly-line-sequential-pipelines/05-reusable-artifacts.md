@@ -21,21 +21,11 @@ step-function pattern (validate input → call or don't call the model → valid
 already satisfies that definition on its own. `Stage` is just enough structure to hold
 one of those functions next to the metadata a pipeline needs to run and log it.
 
-```
-┌───────────────────────────────┐          ┌──────────────────────────────────┐
-│ Stage                         │          │ Pipeline                         │
-├───────────────────────────────┤          ├──────────────────────────────────┤
-│ name: str                     │          │ name: str                        │
-│ prompt_name: str | None       │  1..N    │ stages: list[Stage]              │
-│ prompt_version: str | None    │◀────────▶│                                   │
-│ model: str | None             │          │ run(initial_input)                │
-│ step: (validated input) ->    │          │   -> (final_output, list[StageLog])│
-│       (validated output,      │          │                                   │
-│        usage dict)            │          │ threads stage N's validated output│
-│                                │          │ into stage N+1's input; halts and │
-│ run(input) -> (output, usage) │          │ raises on the first unrecoverable │
-└───────────────────────────────┘          │ failure (§4.3's quarantine rule)  │
-                                            └──────────────────────────────────┘
+```mermaid
+flowchart LR
+    Stage["**Stage**<br/>name: str<br/>prompt_name: str | None<br/>prompt_version: str | None<br/>model: str | None<br/>step: (validated input) -&gt;<br/>(validated output, usage dict)<br/>run(input) -&gt; (output, usage)"]
+    Pipeline["**Pipeline**<br/>name: str<br/>stages: list[Stage]<br/>run(initial_input) -&gt;<br/>(final_output, list[StageLog])<br/>threads stage N's validated output into<br/>stage N+1's input; halts and raises on the<br/>first unrecoverable failure (§4.3's quarantine rule)"]
+    Stage <-->|"1..N"| Pipeline
 ```
 
 `prompt_name`, `prompt_version` and `model` are all `| None` on purpose. Pipeline B's
@@ -558,25 +548,28 @@ pins down *one* prompt. A pipeline manifest is one level up: it lists which stag
 which prompt file at which version, so the pipeline's exact behavior — not just one
 call's — is reconstructable and diffable later.
 
-```
-risk_report.manifest.yaml                    prompts/risk_report/
-┌─────────────────────────────┐              ┌─────────────────────────────┐
-│ pipeline: risk_report        │              │ 01_translate.system.md      │
-│ version: 1.0.0               │              │   id: translate             │
-│ stages:                      │              │   version: 1.0.0            │
-│  - name: translate           │── prompt ───▶│                              │
-│    prompt: .../01_translate  │              ├─────────────────────────────┤
-│    prompt_version: 1.0.0     │              │ 02_summarize.system.md      │
-│    model: gemini-3.5-flash   │              ├─────────────────────────────┤
-│  - name: summarize            │── prompt ───▶│ 03_extract_risks.system.md   │
-│    ...                        │              ├─────────────────────────────┤
-│  - name: extract_risks        │── prompt ───▶│ (no file for format_bullets  │
-│    ...                        │              │  — null in the manifest,    │
-│  - name: format_bullets        │── (none) ───│  plain Python, see §5.4)     │
-│    prompt: null                │              └─────────────────────────────┘
-│    prompt_version: null        │
-│    model: null                 │
-└─────────────────────────────┘
+```mermaid
+flowchart LR
+    subgraph M["risk_report.manifest.yaml"]
+        M0["pipeline: risk_report<br/>version: 1.0.0"]
+        M1["stage: translate<br/>prompt: .../01_translate<br/>prompt_version: 1.0.0<br/>model: gemini-3.5-flash"]
+        M2["stage: summarize<br/>..."]
+        M3["stage: extract_risks<br/>..."]
+        M4["stage: format_bullets<br/>prompt: null<br/>prompt_version: null<br/>model: null"]
+    end
+    subgraph P["prompts/risk_report/"]
+        P1["01_translate.system.md<br/>id: translate<br/>version: 1.0.0"]
+        P2["02_summarize.system.md"]
+        P3["03_extract_risks.system.md"]
+        P4["(no file for format_bullets —<br/>null in the manifest, plain Python, see §5.4)"]
+    end
+    M1 -->|"prompt"| P1
+    M2 -->|"prompt"| P2
+    M3 -->|"prompt"| P3
+    M4 -->|"(none)"| P4
+
+    classDef noModelCall fill:#fff4e0,stroke:#d9954a,color:#1a1a1a
+    class M4,P4 noModelCall
 ```
 
 ```python
@@ -673,19 +666,21 @@ A single pipeline run produces one `StageLog` per stage (§5.2). What ties them 
 *one* run's story is `run_id` — generated once, inside `Pipeline.run`, and carried on
 every stage's log line for that execution.
 
-```
-                          run_id = "7e2f4b1a-9c3d-4e11-..."
-                                       │
-        ┌──────────────┬──────────────┼──────────────┬──────────────┐
-        ▼              ▼              ▼              ▼              ▼
-   STAGE classify  STAGE route    STAGE rewrite  STAGE log_summary  (run
-   run_id=7e2f...  run_id=7e2f... run_id=7e2f...  run_id=7e2f...    complete)
-   in=210 out=40   in=0   out=0   in=340 out=95   in=520 out=110
-        │              │              │              │
-        └──────────────┴──────────────┴──────────────┴──── one line per stage,
-                                                              same run_id — the
-                                                              only join key you
-                                                              need later (§6.4)
+```mermaid
+flowchart TD
+    R["run_id = \"7e2f4b1a-9c3d-4e11-...\""]
+    R --> S1["STAGE classify<br/>run_id=7e2f...<br/>in=210 out=40"]
+    R --> S2["STAGE route<br/>run_id=7e2f...<br/>in=0 out=0"]
+    R --> S3["STAGE rewrite<br/>run_id=7e2f...<br/>in=340 out=95"]
+    R --> S4["STAGE log_summary<br/>run_id=7e2f...<br/>in=520 out=110"]
+    S1 --> D["one line per stage, same run_id —<br/>the only join key you need later (§6.4)"]
+    S2 --> D
+    S3 --> D
+    S4 --> D
+    D --> C(["run complete"])
+
+    classDef noModelCall fill:#fff4e0,stroke:#d9954a,color:#1a1a1a
+    class S2 noModelCall
 ```
 
 This directly extends Chapter 1 §6.2's token-cost-engineering material: there, the unit
