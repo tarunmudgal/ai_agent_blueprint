@@ -43,3 +43,4 @@ htmlcov/
 
 # Notebook checkpoints (if any chapter adds notebooks)
 .ipynb_checkpoints/
+/linkedin-editions/
