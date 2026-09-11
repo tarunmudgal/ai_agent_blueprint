@@ -1,0 +1,26 @@
+# Blueprint 4 — The Autopilot Worker (Tool-Using Loop)
+# Install with:  python3 -m pip install -r requirements.txt
+
+# Nothing new here. This chapter's whole mechanism — a model deciding which
+# tool to call, in what order, and looping on the result — is a `tools=[...]`
+# parameter on the exact same client.interactions.create call Chapters 1-3
+# already use, not a new library, not an agent framework. If you already set
+# up Chapter 1's environment, this file installs exactly the same three
+# packages and you can skip straight to the examples.
+
+# The official Google Gen AI SDK.
+# The >=1.55.0 floor is NOT cosmetic: the Interactions API
+# (client.interactions.create(...)) — used for every model call in this
+# chapter, including every tool-calling turn — was only added to the Python
+# SDK in 1.55.0. On anything older, every example here fails with
+# AttributeError on `client.interactions`.
+google-genai>=1.55.0
+
+# Loads GEMINI_API_KEY out of a local .env file so the key never
+# lives in your shell history or in source control.
+python-dotenv>=1.0.0
+
+# Not used for structured output in this chapter's own new code, but kept at
+# the same floor as Chapters 1-3 for a consistent environment across the
+# whole series. v2 is required — v1 has no model_json_schema().
+pydantic>=2.0.0

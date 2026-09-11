@@ -1,0 +1,27 @@
+# Blueprint 5 — The Connected Boardroom (Collaborative Specialist Networks)
+# Install with:  python3 -m pip install -r requirements.txt
+
+# Nothing new here, on purpose. A "specialist" in this chapter is just
+# another client.interactions.create call with its own system_instruction,
+# and a "Supervisor" is Chapter 4's tool-calling loop (run_agent_loop)
+# reused recursively — its "tools" happen to call a specialist instead of
+# touching a database or a simulated API. There is no multi-agent
+# framework, no orchestration library, nothing beyond the same client the
+# rest of the series already uses. If you already set up Chapter 1's
+# environment, this file installs exactly the same three packages.
+
+# The official Google Gen AI SDK.
+# The >=1.55.0 floor is NOT cosmetic: the Interactions API
+# (client.interactions.create(...)) — used for every model call in this
+# chapter, Supervisor turns and specialist calls alike — was only added to
+# the Python SDK in 1.55.0.
+google-genai>=1.55.0
+
+# Loads GEMINI_API_KEY out of a local .env file so the key never
+# lives in your shell history or in source control.
+python-dotenv>=1.0.0
+
+# Not used for structured output in this chapter's own new code, but kept at
+# the same floor as Chapters 1-4 for a consistent environment across the
+# whole series. v2 is required — v1 has no model_json_schema().
+pydantic>=2.0.0

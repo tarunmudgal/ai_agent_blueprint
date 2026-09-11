@@ -1,0 +1,29 @@
+# Blueprint 3 — The Intelligent Library (Grounded Context)
+# Install with:  python3 -m pip install -r requirements.txt
+
+# Nothing new here. This chapter's "search engine" is chunking, embedding,
+# and a plain-Python cosine similarity function — no vector database, no
+# numpy. The google-genai package Chapters 1-2 already require exposes
+# client.models.embed_content: embeddings are a different *model*
+# (gemini-embedding-001), not a different *library*. If you already set up
+# Chapter 1's environment, this file installs exactly the same three
+# packages and you can skip straight to the examples.
+
+# The official Google Gen AI SDK.
+# The >=1.55.0 floor is NOT cosmetic: the Interactions API
+# (client.interactions.create(...)) — used for every generation call in
+# this chapter — was only added to the Python SDK in 1.55.0. On anything
+# older, every generation example here fails with AttributeError on
+# `client.interactions`. embed_content is unaffected by this floor, but we
+# pin the same version for the whole chapter's simplicity.
+google-genai>=1.55.0
+
+# Loads GEMINI_API_KEY out of a local .env file so the key never
+# lives in your shell history or in source control.
+python-dotenv>=1.0.0
+
+# Used for structured output: Chapter 1's exact GroundedAnswer contract is
+# reused verbatim in this chapter, and we hand Pydantic's
+# model_json_schema() straight to response_format and validate the reply
+# with model_validate_json(). v2 is required — v1 has no model_json_schema().
+pydantic>=2.0.0
