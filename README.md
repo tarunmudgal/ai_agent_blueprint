@@ -11,9 +11,9 @@ simplest to most complex. Each gets its own chapter here.
 |---|---|---|---|
 | 1 | **The Smart Intern** — Single-Shot Inquiries | [`01-smart-intern-prompt-engineering/`](./01-smart-intern-prompt-engineering/00-index.md) | Complete |
 | 2 | **The Fixed Assembly Line** — Sequential Pipelines | [`02-fixed-assembly-line-sequential-pipelines/`](./02-fixed-assembly-line-sequential-pipelines/00-index.md) | Complete |
-| 3 | The Intelligent Library — Grounded Context | — | Planned |
-| 4 | The Autopilot Worker — The Tool-Using Loop | — | Planned |
-| 5 | The Connected Boardroom — Specialist Networks | — | Planned |
+| 3 | **The Intelligent Library** — Grounded Context | [`03-intelligent-library-grounded-context/`](./03-intelligent-library-grounded-context/00-index.md) | Complete |
+| 4 | **The Autopilot Worker** — The Tool-Using Loop | [`04-autopilot-worker-tool-using-loop/`](./04-autopilot-worker-tool-using-loop/00-index.md) | Complete |
+| 5 | **The Connected Boardroom** — Specialist Networks | [`05-connected-boardroom-specialist-networks/`](./05-connected-boardroom-specialist-networks/00-index.md) | Complete |
 
 ## Getting started
 
@@ -77,13 +77,37 @@ ai_agent_blueprint/
     ├── examples/                         <- 13 runnable scripts
     ├── prompts/, skills/                 <- reusable artifacts the chapter teaches
     └── requirements.txt, .env.example    <- this chapter's own dependencies
-└── 02-fixed-assembly-line-sequential-pipelines/  <- Chapter 2 (see table above)
-    ├── 00-index.md                       <- chapter table of contents, start here
-    ├── 01-vocabulary.md ... 08-practice.md     <- the chapter, section by section
-    ├── The-Fixed-Assembly-Line-Sequential-Pipelines.md  <- the whole chapter, one file
-    ├── examples/                         <- 6 runnable pipeline scripts
-    ├── prompts/                          <- new stage prompts + 3 reused verbatim from Ch1
-    └── requirements.txt, .env.example    <- this chapter's own dependencies (same 3 packages)
+├── 02-fixed-assembly-line-sequential-pipelines/  <- Chapter 2 (see table above)
+│   ├── 00-index.md                       <- chapter table of contents, start here
+│   ├── 01-vocabulary.md ... 08-practice.md     <- the chapter, section by section
+│   ├── The-Fixed-Assembly-Line-Sequential-Pipelines.md  <- the whole chapter, one file
+│   ├── examples/                         <- 6 runnable pipeline scripts
+│   ├── prompts/                          <- new stage prompts + 3 reused verbatim from Ch1
+│   └── requirements.txt, .env.example    <- this chapter's own dependencies (same 3 packages)
+├── 03-intelligent-library-grounded-context/  <- Chapter 3 (see table above)
+│   ├── 00-index.md                       <- chapter table of contents, start here
+│   ├── 01-vocabulary.md ... 08-practice.md     <- the chapter, section by section
+│   ├── The-Intelligent-Library-Grounded-Context.md  <- the whole chapter, one file
+│   ├── examples/                         <- 6 runnable scripts (corpus, retrieval, pipeline, eval)
+│   ├── prompts/                          <- 3 prompts reused verbatim from Ch1/Ch2
+│   └── requirements.txt, .env.example    <- this chapter's own dependencies (same 3 packages)
+├── 04-autopilot-worker-tool-using-loop/  <- Chapter 4 (see table above)
+│   ├── 00-index.md                       <- chapter table of contents, start here
+│   ├── 01-vocabulary.md ... 08-practice.md     <- the chapter, section by section
+│   ├── The-Autopilot-Worker-Tool-Using-Loop.md  <- the whole chapter, one file
+│   ├── examples/                         <- 6 runnable scripts (tool loop, audit guard, eval)
+│   ├── prompts/                          <- system instructions + tool declarations
+│   └── requirements.txt, .env.example    <- this chapter's own dependencies (same 3 packages)
+├── 05-connected-boardroom-specialist-networks/  <- Chapter 5 (see table above, final chapter)
+│   ├── 00-index.md                       <- chapter table of contents, start here
+│   ├── 01-vocabulary.md ... 08-practice.md     <- the chapter, section by section
+│   ├── The-Connected-Boardroom-Specialist-Networks.md  <- the whole chapter, one file
+│   ├── examples/                         <- 6 runnable scripts (specialists, supervisor, eval)
+│   ├── prompts/                          <- 4 specialist prompts + 1 supervisor prompt
+│   └── requirements.txt, .env.example    <- this chapter's own dependencies (same 3 packages)
+└── linkedin-editions/                    <- compact multi-episode LinkedIn versions, Parts 2-5
+    ├── 02-fixed-assembly-line/, 03-intelligent-library/,
+    └── 04-autopilot-worker/, 05-connected-boardroom/
 ```
 
 ## Development

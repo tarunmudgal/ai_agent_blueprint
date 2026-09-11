@@ -34,3 +34,24 @@ pydantic>=2.0.0
 # client.interactions.create calls Chapter 1 established -- the Stage/Pipeline
 # classes, manifests, and validation gates are all built on the three
 # packages above.
+
+# --- Chapter 3: The Intelligent Library (Grounded Context) ------------------
+#
+# No new packages. google-genai already exposes client.models.embed_content for
+# embeddings -- a different model (gemini-embedding-001), not a different
+# library. Chunking, the in-memory index, and cosine similarity are plain
+# Python; no vector-database package is required at this teaching scale.
+
+# --- Chapter 4: The Autopilot Worker (The Tool-Using Loop) ------------------
+#
+# No new packages. Tool calling is a parameter (tools=[...]) on the same
+# client.interactions.create call every prior chapter already uses -- not a
+# new library. The manual inspect/execute/submit loop is plain Python.
+
+# --- Chapter 5: The Connected Boardroom (Specialist Networks) --------------
+#
+# No new packages. A "specialist" is just another client.interactions.create
+# call with its own system_instruction; a "Supervisor" is Chapter 4's
+# tool-calling loop applied recursively, where each tool body dispatches to a
+# specialist instead of touching data. This is the final chapter -- no
+# further packages are ever added by this series.
